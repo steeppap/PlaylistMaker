@@ -15,53 +15,81 @@
         android:orientation="vertical">
 
         <FrameLayout
+
             android:layout_width="match_parent"
-            android:layout_height="56dp">
+            android:layout_height="@dimen/panel_header_height">
 
-            <FrameLayout
-                android:layout_width="56dp"
-                android:layout_height="56dp">
+            <LinearLayout
 
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:src="@drawable/vector_back" />
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:layout_marginVertical="4dp"
+                android:layout_marginEnd="52dp"
+                android:background="@color/white"
+                android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/back_button"
-                    style="?android:attr/borderlessButtonStyle"
+                <FrameLayout
+
+                    android:layout_width="48dp"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_arrow_back_24" />
+
+                    <Button
+                        android:id="@+id/back_button"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:foreground="?attr/selectableItemBackground" />
+
+                </FrameLayout>
+
+                <FrameLayout
+
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:foreground="?attr/selectableItemBackground" />
+                    android:layout_height="match_parent">
 
-            </FrameLayout>
+                    <TextView
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="56dp"
-                android:layout_marginTop="14dp"
-                android:text="@string/settings"
-                android:textColor="@color/black_button_text"
-                android:textSize="@dimen/text_size_main" />
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="12dp"
+                        android:text="@string/settings"
+                        android:textColor="@color/black_button_text"
+                        android:fontFamily="@font/ys_display_medium"
+                        android:textFontWeight="500"
+                        android:textSize="@dimen/text_size_main" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
         </FrameLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="61dp"
-            android:layout_marginTop="24dp">
+            android:layout_height="@dimen/height_settings_point"
+            android:layout_marginTop="@dimen/indentation_from_header_panel">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="21dp"
-                android:layout_marginBottom="21dp"
+                android:layout_marginStart="@dimen/layout_marginStart_text_settings_point"
+                android:layout_marginVertical="@dimen/layout_marginVertical_settings_point"
                 android:text="@string/dark_theme"
-                android:textColor="@color/black_button_text"
-                android:textSize="@dimen/text_size_settings" />
+                android:textColor="@color/black"
+                android:fontFamily="@font/ys_display_regular"
+                android:textFontWeight="400"
+                android:textSize="@dimen/text_size_settings_point" />
 
             <Switch
                 android:layout_width="56dp"
@@ -76,31 +104,31 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="61dp">
+            android:layout_height="@dimen/height_settings_point">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="21dp"
-                android:layout_marginBottom="21dp"
+                android:layout_marginStart="@dimen/layout_marginStart_text_settings_point"
+                android:layout_marginVertical="@dimen/layout_marginVertical_settings_point"
                 android:text="@string/share"
-                android:textColor="@color/black_button_text"
-                android:textSize="@dimen/text_size_settings" />
+                android:textColor="@color/black"
+                android:fontFamily="@font/ys_display_regular"
+                android:textSize="@dimen/text_size_settings_point" />
 
             <FrameLayout
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="@dimen/ic_size_24"
+                android:layout_height="@dimen/ic_size_24"
                 android:layout_gravity="end"
-                android:layout_marginTop="19dp"
-                android:layout_marginEnd="12dp">
+                android:layout_marginTop="@dimen/layout_marginTop_icon"
+                android:layout_marginEnd="@dimen/layout_marginEnd_icon">
 
                 <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center"
-                    android:src="@drawable/vector_share" />
+                    android:src="@drawable/ic_share_24" />
 
             </FrameLayout>
 
@@ -113,31 +141,32 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="61dp">
+            android:layout_height="@dimen/height_settings_point">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="21dp"
-                android:layout_marginBottom="21dp"
+                android:layout_marginStart="@dimen/layout_marginStart_text_settings_point"
+                android:layout_marginVertical="@dimen/layout_marginVertical_settings_point"
                 android:text="@string/write_support"
-                android:textColor="@color/black_button_text"
-                android:textSize="@dimen/text_size_settings" />
+                android:textColor="@color/black"
+                android:fontFamily="@font/ys_display_regular"
+                android:textFontWeight="400"
+                android:textSize="@dimen/text_size_settings_point" />
 
             <FrameLayout
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="@dimen/ic_size_24"
+                android:layout_height="@dimen/ic_size_24"
                 android:layout_gravity="end"
-                android:layout_marginTop="19dp"
-                android:layout_marginEnd="12dp">
+                android:layout_marginTop="@dimen/layout_marginTop_icon"
+                android:layout_marginEnd="@dimen/layout_marginEnd_icon">
 
                 <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center"
-                    android:src="@drawable/vector_support" />
+                    android:src="@drawable/ic_support_24" />
 
             </FrameLayout>
 
@@ -150,31 +179,32 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="61dp">
+            android:layout_height="@dimen/height_settings_point">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="21dp"
-                android:layout_marginBottom="21dp"
+                android:layout_marginStart="@dimen/layout_marginStart_text_settings_point"
+                android:layout_marginVertical="@dimen/layout_marginVertical_settings_point"
                 android:text="@string/user_agreement"
-                android:textColor="@color/black_button_text"
-                android:textSize="@dimen/text_size_settings" />
+                android:textColor="@color/black"
+                android:fontFamily="@font/ys_display_regular"
+                android:textFontWeight="400"
+                android:textSize="@dimen/text_size_settings_point" />
 
             <FrameLayout
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="@dimen/ic_size_24"
+                android:layout_height="@dimen/ic_size_24"
                 android:layout_gravity="end"
-                android:layout_marginTop="19dp"
-                android:layout_marginEnd="12dp">
+                android:layout_marginTop="@dimen/layout_marginTop_icon"
+                android:layout_marginEnd="@dimen/layout_marginEnd_icon">
 
                 <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center"
-                    android:src="@drawable/vector_arrow_forward" />
+                    android:src="@drawable/ic_arrow_forward_24" />
 
             </FrameLayout>
 
