@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="text_size_main">22sp</dimen>
+    <dimen name="text_size_settings_point">16sp</dimen>
+    <dimen name="icon_padding">8dp</dimen>
+    <dimen name="button_radius">16dp</dimen>
+    <dimen name="panel_header_height">56dp</dimen>
+    <dimen name="height_settings_point">61dp</dimen>
+    <dimen name="indentation_from_header_panel">24dp</dimen>
+    <dimen name="layout_marginVertical_settings_point">21dp</dimen>
+    <dimen name="layout_marginStart_text_settings_point">16dp</dimen>
+    <dimen name="ic_size_24">24dp</dimen>
+    <dimen name="layout_marginTop_icon">19dp</dimen>
+    <dimen name="layout_marginEnd_icon">12dp</dimen>
+
+</resources>
