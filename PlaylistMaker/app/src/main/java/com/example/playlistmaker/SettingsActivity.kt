@@ -4,11 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.Switch
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.app.NavUtils
+import android.app.UiModeManager.MODE_NIGHT_YES
+import android.app.UiModeManager.MODE_NIGHT_NO
+import android.net.Uri
+import androidx.appcompat.app.AppCompatDelegate
+
 
 class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,9 +27,42 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         val backButton = findViewById<Button>(R.id.back_button)
+        val darkModeSwitch = findViewById<Switch>(R.id.dark_mode_switch)
+        val shareTheAppButton = findViewById<Button>(R.id.share_the_app_button)
+        val writeToSupportButton = findViewById<Button>(R.id.write_to_support_button)
+        val userAgreementButton = findViewById<Button>(R.id.user_agreement_button)
 
-        backButton.setOnClickListener{
+        backButton.setOnClickListener {
             finish()
+        }
+        darkModeSwitch.setOnCheckedChangeListener { _ , isChecked ->
+            if (isChecked) {
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES)
+
+            } else {
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO)
+            }
+        }
+
+        shareTheAppButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.url_to_the_course))
+            intent.type = "text/plain"
+            startActivity(Intent.createChooser(intent, null))
+        }
+
+        writeToSupportButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_SENDTO)
+            intent.data = Uri.parse("mailto:${getString(R.string.support_email)}")
+            intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.text_to_support_message))
+            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.title_to_support_message))
+            startActivity(intent)
+        }
+
+        userAgreementButton.setOnClickListener {
+            val intent = Intent(android.content.Intent.ACTION_VIEW)
+            intent.data = Uri.parse(getString(R.string.url_to_the_offer))
+            startActivity(intent)
         }
     }
 }
