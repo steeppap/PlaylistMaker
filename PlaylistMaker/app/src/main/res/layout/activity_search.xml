@@ -7,4 +7,92 @@
     android:layout_height="match_parent"
     tools:context=".SearchActivity">
 
+    <LinearLayout
+        style="@style/OtherScreensBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <FrameLayout
+
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/panel_header_height"
+            android:orientation="vertical">
+
+            <LinearLayout
+
+                style="@style/OtherScreensBackground"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginVertical="@dimen/header_margin_vertical_and_start"
+                android:layout_marginStart="@dimen/header_margin_vertical_and_start"
+                android:layout_marginEnd="@dimen/header_margin_end"
+                android:orientation="horizontal">
+
+                <FrameLayout
+
+                    android:layout_width="@dimen/back_butt_layout_width"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+
+                        style="@style/HeaderPanelElementsColor"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_arrow_back_24" />
+
+                    <Button
+
+                        android:id="@+id/back_button"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:foreground="?attr/selectableItemBackground" />
+
+                </FrameLayout>
+
+                <FrameLayout
+
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+
+                        style="@style/HeaderPanelElementsColor"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/head_text_margin_start_and_bot"
+                        android:layout_marginTop="@dimen/head_text_margin_top"
+                        android:layout_marginBottom="@dimen/head_text_margin_start_and_bot"
+                        android:fontFamily="@font/ys_display_medium"
+                        android:text="@string/search"
+                        android:textFontWeight="500"
+                        android:textSize="@dimen/text_size_main" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="52dp">
+
+            <EditText
+                android:id="@+id/search_edit_text"
+                style="@style/RoundedEditText"
+                android:hint="@string/search">
+
+            </EditText>
+
+            <ImageView
+                style="@style/ClearIcon"
+                android:id="@+id/clear_icon" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
