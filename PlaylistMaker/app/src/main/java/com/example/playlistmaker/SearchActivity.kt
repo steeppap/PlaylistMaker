@@ -19,7 +19,7 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var editText: EditText
     private lateinit var backButton : Button
     private lateinit var clearButton: ImageView
-    lateinit var inputText: String
+    var inputText: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
