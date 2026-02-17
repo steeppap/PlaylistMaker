@@ -13,5 +13,4 @@
     <string name="support_email">akulov_l@mail.ru</string>
     <string name="title_to_support_message">Сообщение разработчикам и разработчицам приложения Playlist Maker</string>
     <string name="text_to_support_message">Спасибо разработчикам и разработчицам за крутое приложение!</string>
-    <string name="toast_no_email_app">На устройстве не найдено приложение для отправки e-mail</string>
 </resources>

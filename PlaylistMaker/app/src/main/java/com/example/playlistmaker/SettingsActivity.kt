@@ -11,9 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import android.app.UiModeManager.MODE_NIGHT_YES
 import android.app.UiModeManager.MODE_NIGHT_NO
-import android.content.ActivityNotFoundException
 import android.net.Uri
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 
 
@@ -58,14 +56,7 @@ class SettingsActivity : AppCompatActivity() {
             intent.data = Uri.parse("mailto:${getString(R.string.support_email)}")
             intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.text_to_support_message))
             intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.title_to_support_message))
-            try {
-                startActivity(intent)
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.toast_no_email_app),
-                    Toast.LENGTH_SHORT).show()
-            }
+            startActivity(intent)
         }
 
         userAgreementButton.setOnClickListener {
