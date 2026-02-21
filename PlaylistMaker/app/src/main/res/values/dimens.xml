@@ -17,5 +17,6 @@
     <dimen name="back_butt_layout_width">48dp</dimen>
     <dimen name="head_text_margin_start_and_bot">12dp</dimen>
     <dimen name="head_text_margin_top">10dp</dimen>
+    <dimen name="track_icon">45dp</dimen>
 
 </resources>
