@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -13,17 +14,34 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.toString
 
 class SearchActivity : AppCompatActivity() {
 
+    private val iTunesBaseUrl = "https://itunes.apple.com"
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(iTunesBaseUrl)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    private val iTunesService = retrofit.create(ITunesApi::class.java)
     private lateinit var editText: EditText
-    private lateinit var backButton : Button
+    private lateinit var backButton: Button
+    private lateinit var updateButton: Button
     private lateinit var clearButton: ImageView
+    private lateinit var connectionError: LinearLayout
+    private lateinit var nothingFoundError: LinearLayout
     private var inputText: String = ""
+    private var trackList = mutableListOf<Track>()
     private lateinit var recycler: RecyclerView
+    private val adapter = TrackAdapter(trackList)
+    private var lastSearchQuery: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,11 +55,13 @@ class SearchActivity : AppCompatActivity() {
 
         editText = findViewById(R.id.search_edit_text)
         backButton = findViewById(R.id.back_button)
+        updateButton = findViewById(R.id.update_btn)
         clearButton = findViewById(R.id.clear_icon)
         recycler = findViewById(R.id.recyclerViewTrackList)
+        connectionError = findViewById(R.id.connection_error)
+        nothingFoundError = findViewById(R.id.nothing_found)
 
-        recycler.layoutManager = LinearLayoutManager(this)
-        recycler.adapter = TrackAdapter(initTrackList() as MutableList<Track>)
+        recycler.adapter = adapter
 
         if (savedInstanceState != null) {
             onRestoreInstanceState(savedInstanceState)
@@ -52,10 +72,11 @@ class SearchActivity : AppCompatActivity() {
         }
 
         clearButton.setOnClickListener {
+            trackList.clear()
+            adapter.notifyDataSetChanged()
             editText.setText("")
             editText.clearFocus()
-            val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            inputMethodManager.hideSoftInputFromWindow(editText.windowToken, 0)
+            hideKeyboard()
         }
 
         val textWatcher = object : TextWatcher {
@@ -75,6 +96,20 @@ class SearchActivity : AppCompatActivity() {
         }
 
         editText.addTextChangedListener(textWatcher)
+        editText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val text = editText.text.toString().trim()
+                if (text.isNotEmpty()) {
+                    search(text)
+                    hideKeyboard()
+                }
+                true
+            } else false
+        }
+
+        updateButton.setOnClickListener {
+            update(lastSearchQuery)
+        }
 
     }
 
@@ -89,7 +124,7 @@ class SearchActivity : AppCompatActivity() {
         editText.setText(savedText)
     }
 
-    fun clearButtonVisibility(s: CharSequence?): Int {
+    private fun clearButtonVisibility(s: CharSequence?): Int {
         return if (s.isNullOrEmpty()) {
             View.GONE
         } else {
@@ -97,38 +132,60 @@ class SearchActivity : AppCompatActivity() {
         }
     }
 
-    fun initTrackList(): List<Track> {
-        val trackList = mutableListOf<Track>()
-        trackList.add(Track(
-            trackName = "Smells Like Teen Spirit",
-            artistName = "Nirvana",
-            trackTime = "5:01",
-            artworkUrl100 = "https://is5-ssl.mzstatic.com/image/thumb/Music115/v4/7b/58/c2/7b58c21a-2b51-2bb2-e59a-9bb9b96ad8c3/00602567924166.rgb.jpg/100x100bb.jpg",
-        ))
-        trackList.add(Track(
-            trackName = "Billie Jean",
-            artistName = "Michael Jackson",
-            trackTime = "4:35",
-            artworkUrl100 = "https://is5-ssl.mzstatic.com/image/thumb/Music125/v4/3d/9d/38/3d9d3811-71f0-3a0e-1ada-3004e56ff852/827969428726.jpg/100x100bb.jpg",
-        ))
-        trackList.add(Track(
-            trackName = "Stayin' Alive",
-            artistName = "Bee Gees",
-            trackTime = "4:10",
-            artworkUrl100 = "https://is4-ssl.mzstatic.com/image/thumb/Music115/v4/1f/80/1f/1f801fc1-8c0f-ea3e-d3e5-387c6619619e/16UMGIM86640.rgb.jpg/100x100bb.jpg"
-        ))
-        trackList.add(Track(
-            trackName = "Whole Lotta Love",
-            artistName = "Led Zeppelin",
-            trackTime = "5:33",
-            artworkUrl100 = "https://is2-ssl.mzstatic.com/image/thumb/Music62/v4/7e/17/e3/7e17e33f-2efa-2a36-e916-7f808576cf6b/mzm.fyigqcbs.jpg/100x100bb.jpg"
-        ))
-        trackList.add(Track(
-            trackName = "Sweet Child O'Mine",
-            artistName = "Guns N' Roses",
-            trackTime = "5:03",
-            artworkUrl100 = "https://is5-ssl.mzstatic.com/image/thumb/Music125/v4/a0/4d/c4/a04dc484-03cc-02aa-fa82-5334fcb4bc16/18UMGIM24878.rgb.jpg/100x100bb.jpg"
-        ))
-        return trackList
+    private fun search(text: String) {
+        lastSearchQuery = text
+        nothingFoundError.visibility = View.GONE
+        connectionError.visibility = View.GONE
+        if (lastSearchQuery.isNotEmpty()) {
+            iTunesService.search(lastSearchQuery).enqueue(object : Callback<ITunesResponse> {
+                override fun onResponse(
+                    call: Call<ITunesResponse>,
+                    response: Response<ITunesResponse>
+                ) {
+                    if (response.code() == 200) {
+                        trackList.clear()
+                        if (response.body()?.results?.isNotEmpty() == true) {
+                            trackList.addAll(response.body()?.results!!)
+                            adapter.notifyDataSetChanged()
+                        }
+                        if (trackList.isEmpty()) {
+                            showError(response.code())
+                        }
+                    } else {
+                        showError(response.code())
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call<ITunesResponse?>?,
+                    t: Throwable?
+                ) {
+                    showError(0)
+                }
+            })
+        }
+    }
+
+    private fun hideKeyboard(){
+        val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.hideSoftInputFromWindow(editText.windowToken, 0)
+    }
+    private fun showError(codeError: Int) {
+        if (codeError == 200) {
+            trackList.clear()
+            adapter.notifyDataSetChanged()
+            nothingFoundError.visibility = View.VISIBLE
+            connectionError.visibility = View.GONE
+        } else {
+            trackList.clear()
+            adapter.notifyDataSetChanged()
+            connectionError.visibility = View.VISIBLE
+            nothingFoundError.visibility = View.GONE
+        }
+    }
+
+    private fun update(lastSearchQuery: String){
+        search(lastSearchQuery)
+        connectionError.visibility= View.GONE
     }
 }

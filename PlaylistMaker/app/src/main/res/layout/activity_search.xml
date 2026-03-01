@@ -83,21 +83,32 @@
             <EditText
                 android:id="@+id/search_edit_text"
                 style="@style/RoundedEditText"
-                android:hint="@string/search">
+                android:hint="@string/search"
+                android:imeOptions="actionDone"
+                android:singleLine="true">
 
             </EditText>
 
             <ImageView
-                style="@style/ClearIcon"
-                android:id="@+id/clear_icon" />
+                android:id="@+id/clear_icon"
+                style="@style/ClearIcon" />
 
         </FrameLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewTrackList"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="16dp"/>
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewTrackList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="16dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <include layout="@layout/nothing_found_error"/>
+            <include layout="@layout/connection_error"/>
+        </FrameLayout>
 
     </LinearLayout>
 

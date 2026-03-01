@@ -8,7 +8,7 @@
     <dimen name="height_settings_point">61dp</dimen>
     <dimen name="indentation_from_header_panel">24dp</dimen>
     <dimen name="layout_marginVertical_settings_point">21dp</dimen>
-    <dimen name="layout_marginStart_text_settings_point">16dp</dimen>
+    <dimen name="margin_16">16dp</dimen>
     <dimen name="ic_size_24">24dp</dimen>
     <dimen name="layout_marginTop_settings_icon">19dp</dimen>
     <dimen name="layout_marginEnd_settings_icon">12dp</dimen>
@@ -18,5 +18,7 @@
     <dimen name="head_text_margin_start_and_bot">12dp</dimen>
     <dimen name="head_text_margin_top">10dp</dimen>
     <dimen name="track_icon">45dp</dimen>
+    <dimen name="margin_102">102dp</dimen>
+    <dimen name="text_size_19">19sp</dimen>
 
 </resources>
