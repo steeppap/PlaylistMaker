@@ -14,7 +14,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import retrofit2.Call
 import retrofit2.Callback
@@ -22,12 +21,14 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.toString
-
 class SearchActivity : AppCompatActivity() {
-
-    private val iTunesBaseUrl = "https://itunes.apple.com"
+    companion object{
+        private const val I_TUNES_BASE_URL = "https://itunes.apple.com"
+        private const val COMPLITE_CODE = 200
+        private const val FAIL_CODE = 0
+    }
     private val retrofit = Retrofit.Builder()
-        .baseUrl(iTunesBaseUrl)
+        .baseUrl(I_TUNES_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
     private val iTunesService = retrofit.create(ITunesApi::class.java)
@@ -142,7 +143,7 @@ class SearchActivity : AppCompatActivity() {
                     call: Call<ITunesResponse>,
                     response: Response<ITunesResponse>
                 ) {
-                    if (response.code() == 200) {
+                    if (response.code() == COMPLITE_CODE) {
                         trackList.clear()
                         if (response.body()?.results?.isNotEmpty() == true) {
                             trackList.addAll(response.body()?.results!!)
@@ -160,7 +161,7 @@ class SearchActivity : AppCompatActivity() {
                     call: Call<ITunesResponse?>?,
                     t: Throwable?
                 ) {
-                    showError(0)
+                    showError(FAIL_CODE)
                 }
             })
         }
@@ -170,6 +171,8 @@ class SearchActivity : AppCompatActivity() {
         val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.hideSoftInputFromWindow(editText.windowToken, 0)
     }
+
+
     private fun showError(codeError: Int) {
         if (codeError == 200) {
             trackList.clear()
