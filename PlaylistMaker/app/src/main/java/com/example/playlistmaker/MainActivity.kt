@@ -31,14 +31,10 @@ class MainActivity : AppCompatActivity() {
             startActivity(searchIntent)
         }
 
-        val buttonClickListener: View.OnClickListener = object : View.OnClickListener {
-            override fun onClick(v: View?) {
-                val mediaLibraryIntent = Intent(this@MainActivity, MediaLibraryActivity::class.java)
-                startActivity(mediaLibraryIntent)
-            }
+        mediaLibraryButton.setOnClickListener {
+            val mediaLibraryIntent = Intent(this@MainActivity, MediaLibraryActivity::class.java)
+            startActivity(mediaLibraryIntent)
         }
-
-        mediaLibraryButton.setOnClickListener(buttonClickListener)
 
         settingsButton.setOnClickListener {
             val settingsIntent = Intent(this, SettingsActivity::class.java)
