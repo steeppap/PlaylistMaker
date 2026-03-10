@@ -83,6 +83,7 @@
             <EditText
                 android:id="@+id/search_edit_text"
                 style="@style/RoundedEditText"
+                android:focusable="true"
                 android:hint="@string/search"
                 android:imeOptions="actionDone"
                 android:singleLine="true">
@@ -99,15 +100,45 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <LinearLayout
+                android:id="@+id/history_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    style="@style/NothingFoundAndConnectionErrorTextStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/header_margin_end"
+                    android:layout_marginTop="@dimen/ic_size_24"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/history_title"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerViewHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+                <Button
+                    style="@style/UpdateButtonStyle"
+                    android:id="@+id/clear_history_btn"
+                    android:text="@string/clear_history" />
+
+            </LinearLayout>
+
+            <include layout="@layout/nothing_found_error" />
+            <include layout="@layout/connection_error" />
+
             <androidx.recyclerview.widget.RecyclerView
+                android:visibility="gone"
                 android:id="@+id/recyclerViewTrackList"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="16dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-            <include layout="@layout/nothing_found_error"/>
-            <include layout="@layout/connection_error"/>
         </FrameLayout>
 
     </LinearLayout>

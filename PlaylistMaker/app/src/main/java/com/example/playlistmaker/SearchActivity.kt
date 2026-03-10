@@ -21,12 +21,14 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.toString
+
 class SearchActivity : AppCompatActivity() {
-    companion object{
+    companion object {
         private const val I_TUNES_BASE_URL = "https://itunes.apple.com"
         private const val COMPLITE_CODE = 200
         private const val FAIL_CODE = 0
     }
+
     private val retrofit = Retrofit.Builder()
         .baseUrl(I_TUNES_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
@@ -35,14 +37,20 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var editText: EditText
     private lateinit var backButton: Button
     private lateinit var updateButton: Button
+    private lateinit var clearHistoryButton: Button
     private lateinit var clearButton: ImageView
     private lateinit var connectionError: LinearLayout
     private lateinit var nothingFoundError: LinearLayout
     private var inputText: String = ""
     private var trackList = mutableListOf<Track>()
-    private lateinit var recycler: RecyclerView
-    private val adapter = TrackAdapter(trackList)
+    private lateinit var recyclerTrackList: RecyclerView
+    private lateinit var recyclerHistory: RecyclerView
+    private lateinit var historyView: View
+    private lateinit var trackListAdapter: TrackAdapter
+    private lateinit var historyAdapter: TrackAdapter
     private var lastSearchQuery: String = ""
+    private lateinit var searchHistory: SearchHistory
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,15 +62,31 @@ class SearchActivity : AppCompatActivity() {
             insets
         }
 
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        searchHistory = SearchHistory(prefs)
+
         editText = findViewById(R.id.search_edit_text)
         backButton = findViewById(R.id.back_button)
         updateButton = findViewById(R.id.update_btn)
         clearButton = findViewById(R.id.clear_icon)
-        recycler = findViewById(R.id.recyclerViewTrackList)
+        clearHistoryButton = findViewById(R.id.clear_history_btn)
+        recyclerTrackList = findViewById(R.id.recyclerViewTrackList)
+        recyclerHistory = findViewById(R.id.recyclerViewHistory)
+        historyView = findViewById(R.id.history_view)
         connectionError = findViewById(R.id.connection_error)
         nothingFoundError = findViewById(R.id.nothing_found)
 
-        recycler.adapter = adapter
+        trackListAdapter = TrackAdapter(trackList) { track ->
+            searchHistory.addTrack(track)
+        }
+
+        historyAdapter = TrackAdapter(searchHistory.getHistory()) { track ->
+            searchHistory.addTrack(track)
+            showHistory()
+        }
+
+        recyclerTrackList.adapter = trackListAdapter
+        recyclerHistory.adapter = historyAdapter
 
         if (savedInstanceState != null) {
             onRestoreInstanceState(savedInstanceState)
@@ -74,10 +98,16 @@ class SearchActivity : AppCompatActivity() {
 
         clearButton.setOnClickListener {
             trackList.clear()
-            adapter.notifyDataSetChanged()
+            trackListAdapter.notifyDataSetChanged()
             editText.setText("")
             editText.clearFocus()
             hideKeyboard()
+        }
+
+        clearHistoryButton.setOnClickListener {
+            searchHistory.clear()
+            historyAdapter.updateTrackList(searchHistory.getHistory())
+            historyView.visibility = View.GONE
         }
 
         val textWatcher = object : TextWatcher {
@@ -88,6 +118,7 @@ class SearchActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
 
                 clearButton.visibility = clearButtonVisibility(s)
+                historyView.visibility = View.GONE
             }
 
             override fun afterTextChanged(s: Editable?) {
@@ -96,7 +127,14 @@ class SearchActivity : AppCompatActivity() {
             }
         }
 
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                showHistory()
+            }
+        }
+
         editText.addTextChangedListener(textWatcher)
+
         editText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val text = editText.text.toString().trim()
@@ -132,11 +170,12 @@ class SearchActivity : AppCompatActivity() {
             View.VISIBLE
         }
     }
-
     private fun search(text: String) {
         lastSearchQuery = text
         nothingFoundError.visibility = View.GONE
         connectionError.visibility = View.GONE
+        recyclerTrackList.visibility = View.VISIBLE
+
         if (lastSearchQuery.isNotEmpty()) {
             iTunesService.search(lastSearchQuery).enqueue(object : Callback<ITunesResponse> {
                 override fun onResponse(
@@ -147,7 +186,7 @@ class SearchActivity : AppCompatActivity() {
                         trackList.clear()
                         if (response.body()?.results?.isNotEmpty() == true) {
                             trackList.addAll(response.body()?.results!!)
-                            adapter.notifyDataSetChanged()
+                            trackListAdapter.notifyDataSetChanged()
                         }
                         if (trackList.isEmpty()) {
                             showError(response.code())
@@ -167,28 +206,42 @@ class SearchActivity : AppCompatActivity() {
         }
     }
 
-    private fun hideKeyboard(){
+    private fun hideKeyboard() {
         val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.hideSoftInputFromWindow(editText.windowToken, 0)
     }
 
-
     private fun showError(codeError: Int) {
         if (codeError == 200) {
-            trackList.clear()
-            adapter.notifyDataSetChanged()
+            recyclerTrackList.visibility = View.GONE
             nothingFoundError.visibility = View.VISIBLE
             connectionError.visibility = View.GONE
         } else {
-            trackList.clear()
-            adapter.notifyDataSetChanged()
+            recyclerTrackList.visibility = View.GONE
             connectionError.visibility = View.VISIBLE
             nothingFoundError.visibility = View.GONE
+
         }
     }
 
-    private fun update(lastSearchQuery: String){
+    private fun showHistory() {
+        val history = searchHistory.getHistory()
+        if (history.isNotEmpty()) {
+            historyView.visibility = View.VISIBLE
+            recyclerHistory.visibility = View.VISIBLE
+            recyclerTrackList.visibility = View.GONE
+            connectionError.visibility = View.GONE
+            nothingFoundError.visibility = View.GONE
+            historyAdapter.updateTrackList(history)
+        }
+        else{
+            historyView.visibility = View.GONE
+            recyclerHistory.visibility = View.GONE
+        }
+    }
+
+    private fun update(lastSearchQuery: String) {
         search(lastSearchQuery)
-        connectionError.visibility= View.GONE
+        connectionError.visibility = View.GONE
     }
 }

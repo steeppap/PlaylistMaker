@@ -37,13 +37,9 @@ class SettingsActivity : AppCompatActivity() {
         backButton.setOnClickListener {
             finish()
         }
-        darkModeSwitch.setOnCheckedChangeListener { _ , isChecked ->
-            if (isChecked) {
-                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES)
 
-            } else {
-                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO)
-            }
+        darkModeSwitch.setOnCheckedChangeListener { switcher , сhecked ->
+            (applicationContext as App).switchTheme(сhecked)
         }
 
         shareTheAppButton.setOnClickListener {
