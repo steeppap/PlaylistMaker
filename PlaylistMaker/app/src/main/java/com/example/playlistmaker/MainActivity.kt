@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         mediaLibraryButton.setOnClickListener {
-            val mediaLibraryIntent = Intent(this@MainActivity, MediaLibraryActivity::class.java)
+            val mediaLibraryIntent = Intent(this, MediaLibraryActivity::class.java)
             startActivity(mediaLibraryIntent)
         }
 

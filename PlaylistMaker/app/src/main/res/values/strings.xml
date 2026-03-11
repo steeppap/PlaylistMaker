@@ -16,5 +16,6 @@
     <string name="connection_error">Проблемы со связью \n\n Загрузка не удалась. Проверьте \n подключение к интернету</string>
     <string name="nothing_found">Ничего не нашлось</string>
     <string name="update">Обновить</string>
-    <string name="i_tunes_base_url" translatable="false">https://itunes.apple.com</string>
+    <string name="history_title">Вы искали</string>
+    <string name="clear_history">Очистить историю</string>
 </resources>
