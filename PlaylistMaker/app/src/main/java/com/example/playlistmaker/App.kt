@@ -5,22 +5,24 @@ import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatDelegate
 
 class App : Application() {
-    private val prefsName = "app_prefs"
-    private val keyDarkTheme = "dark_theme"
+    companion object{
+        const val PREFS_NAME = "app_prefs"
+        private const val KEY_DARK_THEME = "dark_theme"
+    }
     private lateinit var prefs: SharedPreferences
-    var darkTheme = false
+    var statusDarkTheme = false
         private set
 
     override fun onCreate() {
         super.onCreate()
-        prefs = getSharedPreferences(prefsName, MODE_PRIVATE)
-        darkTheme = prefs.getBoolean(keyDarkTheme, false)
-        switchTheme(darkTheme)
+        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        statusDarkTheme = prefs.getBoolean(KEY_DARK_THEME, false)
+        switchTheme(statusDarkTheme)
     }
 
     fun switchTheme(darkThemeEnabled: Boolean) {
-        darkTheme = darkThemeEnabled
-        prefs.edit().putBoolean(keyDarkTheme,darkTheme).apply()
+        statusDarkTheme = darkThemeEnabled
+        prefs.edit().putBoolean(KEY_DARK_THEME,statusDarkTheme).apply()
         AppCompatDelegate.setDefaultNightMode(
             if (darkThemeEnabled) {
                 AppCompatDelegate.MODE_NIGHT_YES

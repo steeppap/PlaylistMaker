@@ -62,7 +62,7 @@ class SearchActivity : AppCompatActivity() {
             insets
         }
 
-        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val prefs = getSharedPreferences(App.PREFS_NAME, MODE_PRIVATE)
         searchHistory = SearchHistory(prefs)
 
         editText = findViewById(R.id.search_edit_text)
@@ -80,7 +80,7 @@ class SearchActivity : AppCompatActivity() {
             searchHistory.addTrack(track)
         }
 
-        historyAdapter = TrackAdapter(searchHistory.getHistory()) { track ->
+        historyAdapter = TrackAdapter(searchHistory.getHistory().toMutableList()) { track ->
             searchHistory.addTrack(track)
             showHistory()
         }
@@ -227,12 +227,12 @@ class SearchActivity : AppCompatActivity() {
     private fun showHistory() {
         val history = searchHistory.getHistory()
         if (history.isNotEmpty()) {
+            historyAdapter.updateTrackList(history)
             historyView.visibility = View.VISIBLE
             recyclerHistory.visibility = View.VISIBLE
             recyclerTrackList.visibility = View.GONE
             connectionError.visibility = View.GONE
             nothingFoundError.visibility = View.GONE
-            historyAdapter.updateTrackList(history)
         }
         else{
             historyView.visibility = View.GONE

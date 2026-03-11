@@ -33,7 +33,7 @@ class TrackAdapter(
         return trackList.size
     }
 
-    fun updateTrackList(newTrackList: ArrayList<Track>) {
+    fun updateTrackList(newTrackList: List<Track>) {
         trackList.clear()
         trackList.addAll(newTrackList)
         notifyDataSetChanged()
