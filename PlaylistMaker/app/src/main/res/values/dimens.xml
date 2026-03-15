@@ -2,6 +2,7 @@
 <resources>
     <dimen name="text_size_main">22sp</dimen>
     <dimen name="text_size_settings_point">16sp</dimen>
+    <dimen name="text_size_14">14sp</dimen>
     <dimen name="icon_padding">8dp</dimen>
     <dimen name="button_radius">16dp</dimen>
     <dimen name="panel_header_height">56dp</dimen>
@@ -20,5 +21,11 @@
     <dimen name="track_icon">45dp</dimen>
     <dimen name="margin_102">102dp</dimen>
     <dimen name="text_size_19">19sp</dimen>
+    <dimen name="margin_4dp">4dp</dimen>
+    <dimen name="ic_size_100">100dp</dimen>
+    <dimen name="ic_size_51">51dp</dimen>
+    <dimen name="height_32">32dp</dimen>
+    <dimen name="text_size_13">13sp</dimen>
+    <dimen name="margin_30">30dp</dimen>
 
 </resources>

@@ -1,5 +1,6 @@
 package com.example.playlistmaker
 
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -25,8 +26,12 @@ class TrackAdapter(
         holder.bind(trackList[position])
 
         holder.itemView.setOnClickListener {
+            val intent = Intent(holder.itemView.context, PlayerActivity::class.java)
+            intent.putExtra("track", trackList[position])
+            holder.itemView.context.startActivity(intent)
             onItemClick?.invoke(trackList[position])
         }
+
     }
 
     override fun getItemCount(): Int {
