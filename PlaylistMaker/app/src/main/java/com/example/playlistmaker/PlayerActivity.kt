@@ -17,6 +17,9 @@ import java.util.Locale
 
 class PlayerActivity : AppCompatActivity() {
 
+    companion object {
+        private const val EXTRA_TRACK = "track"
+    }
     private lateinit var backBtn: ImageButton
     private lateinit var trackCover: ImageView
     private lateinit var trackName: TextView
@@ -65,7 +68,7 @@ class PlayerActivity : AppCompatActivity() {
         trackGenre = findViewById(R.id.track_genre)
         country = findViewById(R.id.track_country)
 
-        currentTrack = intent.getParcelableExtra("track")
+        currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)
     }
 
     private fun setListeners() {
