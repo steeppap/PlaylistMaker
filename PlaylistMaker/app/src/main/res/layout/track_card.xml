@@ -9,7 +9,7 @@
     tools:context=".SearchActivity">
 
     <ImageView
-        android:id="@+id/trackCover"
+        android:id="@+id/track_cover"
         android:layout_width="@dimen/track_icon"
         android:layout_height="@dimen/track_icon"
         android:layout_marginVertical="@dimen/icon_padding"
@@ -25,7 +25,7 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/trackName"
+            android:id="@+id/track_name"
             style="@style/TextViewTrackName" />
 
         <LinearLayout
@@ -35,7 +35,7 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/artistName"
+                android:id="@+id/artist_name"
                 style="@style/TextViewArtistNameAndTime" />
 
             <ImageView
@@ -45,7 +45,7 @@
                 android:src="@drawable/ic_point_13" />
 
             <TextView
-                android:id="@+id/trackTime"
+                android:id="@+id/track_time"
                 style="@style/TextViewArtistNameAndTime"
                 android:layout_weight="0" />
 

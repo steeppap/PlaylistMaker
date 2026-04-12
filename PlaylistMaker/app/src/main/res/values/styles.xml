@@ -11,6 +11,7 @@
 
     <style name="HeaderPanelElementsColor">
         <item name="tint">@color/black_button_text</item>
+        <item name="backgroundTint">@color/white</item>
         <item name="android:textColor">@color/black_button_text</item>
     </style>
 
@@ -142,7 +143,37 @@
         <item name="android:textSize">14sp</item>
         <item name="cornerRadius">54dp</item>
         <item name="android:layout_marginTop">@dimen/ic_size_24</item>
+    </style>
 
+    <style name="PlayerTrackNameAndArtistName">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_marginTop">@dimen/ic_size_24</item>
+        <item name="android:maxLines">1</item>
+        <item name="fontFamily">@font/ys_display_medium</item>
+        <item name="fontWeight">400</item>
+        <item name="android:textColor">@color/black_button_text</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textSize">@dimen/text_size_main</item>
+    </style>
+
+    <style name="AddToPlaylistAndAddToFavorite">
+        <item name="android:layout_width">@dimen/ic_size_51</item>
+        <item name="android:layout_height">@dimen/ic_size_51</item>
+        <item name="android:layout_marginTop">@dimen/ic_size_24</item>
+        <item name="android:backgroundTint">@color/white</item>
+    </style>
+
+    <style name="TrackDescription">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="fontFamily">@font/ys_display_regular</item>
+        <item name="android:textSize">@dimen/text_size_13</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">@color/black_button_text</item>
+        <item name="android:fontWeight">400</item>
     </style>
 
 </resources>
