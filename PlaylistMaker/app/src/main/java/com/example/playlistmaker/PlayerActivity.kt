@@ -61,14 +61,9 @@ class PlayerActivity : AppCompatActivity() {
             insets
         }
         initViews()
+        initPlayer()
         setListeners()
         showTrackInfo()
-        preparePlayer()
-        handler = Handler(Looper.getMainLooper())
-        playbackTime = Runnable {
-            updatePlaybackTime()
-            handler.postDelayed(playbackTime, DELAY)
-        }
     }
 
     override fun onPause() {
@@ -99,7 +94,16 @@ class PlayerActivity : AppCompatActivity() {
         trackGenre = findViewById(R.id.track_genre)
         country = findViewById(R.id.track_country)
 
+    }
+
+    private fun initPlayer(){
         currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)
+        handler = Handler(Looper.getMainLooper())
+        playbackTime = Runnable {
+            updatePlaybackTime()
+            handler.postDelayed(playbackTime, DELAY)
+        }
+        preparePlayer()
     }
 
     private fun setListeners() {

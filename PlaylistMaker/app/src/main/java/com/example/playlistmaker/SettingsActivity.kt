@@ -16,8 +16,15 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 
-
 class SettingsActivity : AppCompatActivity() {
+
+    private lateinit var backButton: Button
+    private lateinit var darkModeSwitch: Switch
+    private lateinit var shareTheAppButton: Button
+    private lateinit var writeToSupportButton: Button
+    private lateinit var userAgreementButton: Button
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -28,17 +35,24 @@ class SettingsActivity : AppCompatActivity() {
             insets
         }
 
-        val backButton = findViewById<Button>(R.id.back_button)
-        val darkModeSwitch = findViewById<Switch>(R.id.dark_mode_switch)
-        val shareTheAppButton = findViewById<Button>(R.id.share_the_app_button)
-        val writeToSupportButton = findViewById<Button>(R.id.write_to_support_button)
-        val userAgreementButton = findViewById<Button>(R.id.user_agreement_button)
+        initViews()
+        setListeners()
+    }
 
+    private fun initViews() {
+        backButton = findViewById(R.id.back_button)
+        darkModeSwitch = findViewById(R.id.dark_mode_switch)
+        shareTheAppButton = findViewById(R.id.share_the_app_button)
+        writeToSupportButton = findViewById(R.id.write_to_support_button)
+        userAgreementButton = findViewById(R.id.user_agreement_button)
+    }
+
+    private fun setListeners() {
         backButton.setOnClickListener {
             finish()
         }
 
-        darkModeSwitch.setOnCheckedChangeListener { switcher , сhecked ->
+        darkModeSwitch.setOnCheckedChangeListener { switcher, сhecked ->
             (applicationContext as App).switchTheme(сhecked)
         }
 
@@ -60,7 +74,8 @@ class SettingsActivity : AppCompatActivity() {
                 Toast.makeText(
                     this,
                     getString(R.string.toast_no_email_app),
-                    Toast.LENGTH_SHORT).show()
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
