@@ -1,6 +1,9 @@
 package com.example.playlistmaker
 
+import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -19,15 +22,22 @@ class PlayerActivity : AppCompatActivity() {
 
     companion object {
         private const val EXTRA_TRACK = "track"
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
+        private const val DEFAULT_TIME = "00:00"
+        private const val DELAY = 500L
     }
+
     private lateinit var backBtn: ImageButton
     private lateinit var trackCover: ImageView
     private lateinit var trackName: TextView
     private lateinit var artistName: TextView
-    private lateinit var playBtn: ImageButton
+    private lateinit var playStopBtn: ImageButton
     private lateinit var addToPlaylistBtn: ImageButton
     private lateinit var addToFavoriteBtn: ImageButton
-    private lateinit var timeBelowPlayBtn: TextView
+    private lateinit var timeBelowPlayStopBtn: TextView
     private lateinit var trackTime: TextView
     private lateinit var linLayCollection: LinearLayout
     private lateinit var collectionName: TextView
@@ -36,6 +46,10 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var trackGenre: TextView
     private lateinit var country: TextView
     private var currentTrack: Track? = null
+    private val mediaPlayer = MediaPlayer()
+    private var playerState = STATE_DEFAULT
+    private lateinit var handler: Handler
+    private lateinit var playbackTime: Runnable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +61,20 @@ class PlayerActivity : AppCompatActivity() {
             insets
         }
         initViews()
+        initPlayer()
         setListeners()
         showTrackInfo()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        pausePlayer()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacks(playbackTime)
+        mediaPlayer.release()
     }
 
     private fun initViews() {
@@ -56,10 +82,10 @@ class PlayerActivity : AppCompatActivity() {
         trackCover = findViewById(R.id.track_cover)
         trackName = findViewById(R.id.track_name)
         artistName = findViewById(R.id.artist_name)
-        playBtn = findViewById(R.id.play_stop_btn)
+        playStopBtn = findViewById(R.id.play_stop_btn)
         addToPlaylistBtn = findViewById(R.id.add_to_playlist)
         addToFavoriteBtn = findViewById(R.id.add_to_favorite)
-        timeBelowPlayBtn = findViewById(R.id.time_below_play_btn)
+        timeBelowPlayStopBtn = findViewById(R.id.time_below_play_btn)
         trackTime = findViewById(R.id.track_time)
         linLayCollection = findViewById(R.id.linlay_collection)
         collectionName = findViewById(R.id.collection_name)
@@ -68,12 +94,23 @@ class PlayerActivity : AppCompatActivity() {
         trackGenre = findViewById(R.id.track_genre)
         country = findViewById(R.id.track_country)
 
+    }
+
+    private fun initPlayer(){
         currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)
+        handler = Handler(Looper.getMainLooper())
+        playbackTime = Runnable {
+            updatePlaybackTime()
+            handler.postDelayed(playbackTime, DELAY)
+        }
+        preparePlayer()
     }
 
     private fun setListeners() {
         backBtn.setOnClickListener { finish() }
-
+        playStopBtn.setOnClickListener {
+            playbackControl()
+        }
     }
 
     private fun showTrackInfo() {
@@ -90,7 +127,7 @@ class PlayerActivity : AppCompatActivity() {
         trackName.text = currentTrack?.trackName
         artistName.text = currentTrack?.artistName
         trackTime.text = currentTrackTime
-        timeBelowPlayBtn.text = currentTrackTime
+        timeBelowPlayStopBtn.text = DEFAULT_TIME
         collectionName.text = currentTrack?.collectionName
         releaseDate.text = year
         trackGenre.text = currentTrack?.primaryGenreName
@@ -100,4 +137,49 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun getCoverArtwork() =
         currentTrack?.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
+
+    private fun preparePlayer() {
+        mediaPlayer.setDataSource(currentTrack?.previewUrl)
+        mediaPlayer.prepareAsync()
+        mediaPlayer.setOnPreparedListener {
+            playerState = STATE_PREPARED
+        }
+        mediaPlayer.setOnCompletionListener {
+            playStopBtn.setImageResource(R.drawable.ic_play_btn_100)
+            playerState = STATE_PREPARED
+            handler.removeCallbacks(playbackTime)
+            timeBelowPlayStopBtn.text = DEFAULT_TIME
+        }
+    }
+
+    private fun startPlayer() {
+        mediaPlayer.start()
+        playStopBtn.setImageResource(R.drawable.ic_stop_btn_100)
+        playerState = STATE_PLAYING
+        handler.post(playbackTime)
+    }
+
+    private fun pausePlayer() {
+        mediaPlayer.pause()
+        handler.removeCallbacks(playbackTime)
+        playStopBtn.setImageResource(R.drawable.ic_play_btn_100)
+        playerState = STATE_PAUSED
+    }
+
+    private fun playbackControl() {
+        when (playerState) {
+            STATE_PLAYING -> {
+                pausePlayer()
+            }
+
+            STATE_PREPARED, STATE_PAUSED -> {
+                startPlayer()
+            }
+        }
+    }
+
+    private fun updatePlaybackTime() {
+        val time = SimpleDateFormat("mm:ss", Locale.getDefault()).format(mediaPlayer.currentPosition)
+        timeBelowPlayStopBtn.text = time
+    }
 }

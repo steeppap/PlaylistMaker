@@ -27,5 +27,6 @@
     <dimen name="height_32">32dp</dimen>
     <dimen name="text_size_13">13sp</dimen>
     <dimen name="margin_30">30dp</dimen>
+    <dimen name="ic_size_44">44dp</dimen>
 
 </resources>
