@@ -1,15 +1,17 @@
 package com.example.playlistmaker
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -25,8 +27,9 @@ import kotlin.toString
 class SearchActivity : AppCompatActivity() {
     companion object {
         private const val I_TUNES_BASE_URL = "https://itunes.apple.com"
-        private const val COMPLITE_CODE = 200
+        private const val COMPLETE_CODE = 200
         private const val FAIL_CODE = 0
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
     }
 
     private val retrofit = Retrofit.Builder()
@@ -50,6 +53,9 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var historyAdapter: TrackAdapter
     private var lastSearchQuery: String = ""
     private lateinit var searchHistory: SearchHistory
+    private lateinit var progressBar: ProgressBar
+    private lateinit var handler: Handler
+    private lateinit var searchRunnable: Runnable
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,8 +69,8 @@ class SearchActivity : AppCompatActivity() {
         }
 
         val prefs = getSharedPreferences(App.PREFS_NAME, MODE_PRIVATE)
-        searchHistory = SearchHistory(prefs)
 
+        searchHistory = SearchHistory(prefs)
         editText = findViewById(R.id.search_edit_text)
         backButton = findViewById(R.id.back_button)
         updateButton = findViewById(R.id.update_btn)
@@ -75,6 +81,10 @@ class SearchActivity : AppCompatActivity() {
         historyView = findViewById(R.id.history_view)
         connectionError = findViewById(R.id.connection_error)
         nothingFoundError = findViewById(R.id.nothing_found)
+        progressBar = findViewById(R.id.progressBar)
+        handler = Handler(Looper.getMainLooper())
+        searchRunnable = Runnable { search(lastSearchQuery) }
+
 
         trackListAdapter = TrackAdapter(trackList) { track ->
             searchHistory.addTrack(track)
@@ -116,13 +126,13 @@ class SearchActivity : AppCompatActivity() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-
+                lastSearchQuery = editText.text.toString().trim()
                 clearButton.visibility = clearButtonVisibility(s)
                 historyView.visibility = View.GONE
+                searchDebounce()
             }
 
             override fun afterTextChanged(s: Editable?) {
-
                 inputText = s.toString()
             }
         }
@@ -134,17 +144,6 @@ class SearchActivity : AppCompatActivity() {
         }
 
         editText.addTextChangedListener(textWatcher)
-
-        editText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                val text = editText.text.toString().trim()
-                if (text.isNotEmpty()) {
-                    search(text)
-                    hideKeyboard()
-                }
-                true
-            } else false
-        }
 
         updateButton.setOnClickListener {
             update(lastSearchQuery)
@@ -170,11 +169,13 @@ class SearchActivity : AppCompatActivity() {
             View.VISIBLE
         }
     }
-    private fun search(text: String) {
-        lastSearchQuery = text
+
+    private fun search(query: String) {
+        lastSearchQuery = query
         nothingFoundError.visibility = View.GONE
         connectionError.visibility = View.GONE
         recyclerTrackList.visibility = View.VISIBLE
+        progressBar.visibility = View.VISIBLE
 
         if (lastSearchQuery.isNotEmpty()) {
             iTunesService.search(lastSearchQuery).enqueue(object : Callback<ITunesResponse> {
@@ -182,8 +183,9 @@ class SearchActivity : AppCompatActivity() {
                     call: Call<ITunesResponse>,
                     response: Response<ITunesResponse>
                 ) {
-                    if (response.code() == COMPLITE_CODE) {
+                    if (response.code() == COMPLETE_CODE) {
                         trackList.clear()
+                        progressBar.visibility = View.GONE
                         if (response.body()?.results?.isNotEmpty() == true) {
                             trackList.addAll(response.body()?.results!!)
                             trackListAdapter.notifyDataSetChanged()
@@ -212,14 +214,17 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun showError(codeError: Int) {
-        if (codeError == 200) {
+        if (codeError == COMPLETE_CODE) {
             recyclerTrackList.visibility = View.GONE
             nothingFoundError.visibility = View.VISIBLE
             connectionError.visibility = View.GONE
+            progressBar.visibility = View.GONE
+
         } else {
             recyclerTrackList.visibility = View.GONE
             connectionError.visibility = View.VISIBLE
             nothingFoundError.visibility = View.GONE
+            progressBar.visibility = View.GONE
 
         }
     }
@@ -233,8 +238,7 @@ class SearchActivity : AppCompatActivity() {
             recyclerTrackList.visibility = View.GONE
             connectionError.visibility = View.GONE
             nothingFoundError.visibility = View.GONE
-        }
-        else{
+        } else {
             historyView.visibility = View.GONE
             recyclerHistory.visibility = View.GONE
         }
@@ -243,5 +247,12 @@ class SearchActivity : AppCompatActivity() {
     private fun update(lastSearchQuery: String) {
         search(lastSearchQuery)
         connectionError.visibility = View.GONE
+    }
+
+    private fun searchDebounce() {
+        handler.removeCallbacks(searchRunnable)
+        if(lastSearchQuery.isNotBlank()) {
+            handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
+        }
     }
 }
