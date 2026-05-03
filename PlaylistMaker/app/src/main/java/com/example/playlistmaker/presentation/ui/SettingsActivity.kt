@@ -1,20 +1,25 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.ui
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
 import android.widget.Switch
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.app.UiModeManager.MODE_NIGHT_YES
-import android.app.UiModeManager.MODE_NIGHT_NO
-import android.content.ActivityNotFoundException
-import android.net.Uri
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
+import com.example.playlistmaker.Creator
+import com.example.playlistmaker.R
+import com.example.playlistmaker.data.SharedPrefsRepositoryImpl
+import com.example.playlistmaker.data.ThemeRepositoryImpl
+import com.example.playlistmaker.domain.api.SharedPrefsRepository
+import com.example.playlistmaker.domain.api.ThemeInteractor
+import com.example.playlistmaker.domain.api.ThemeRepository
+import com.example.playlistmaker.domain.impl.ThemeInteractorImpl
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -23,6 +28,9 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var shareTheAppButton: Button
     private lateinit var writeToSupportButton: Button
     private lateinit var userAgreementButton: Button
+    private lateinit var themeInteractor: ThemeInteractor
+    private lateinit var sharedPrefs: SharedPrefsRepository
+    private lateinit var themeRepository: ThemeRepository
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,6 +44,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         initViews()
+        themeInteractor = Creator.provideThemeInteractor(this)
         setListeners()
     }
 
@@ -52,8 +61,9 @@ class SettingsActivity : AppCompatActivity() {
             finish()
         }
 
-        darkModeSwitch.setOnCheckedChangeListener { switcher, сhecked ->
-            (applicationContext as App).switchTheme(сhecked)
+        darkModeSwitch.setOnCheckedChangeListener { switcher, _ ->
+            val enabled = themeInteractor.isDarkModeEnabled()
+            themeInteractor.setDarkModeEnabled(!enabled)
         }
 
         shareTheAppButton.setOnClickListener {
@@ -80,7 +90,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         userAgreementButton.setOnClickListener {
-            val intent = Intent(android.content.Intent.ACTION_VIEW)
+            val intent = Intent(Intent.ACTION_VIEW)
             intent.data = Uri.parse(getString(R.string.url_to_the_offer))
             startActivity(intent)
         }
