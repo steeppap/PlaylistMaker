@@ -6,7 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlin.collections.removeAll
 import androidx.core.content.edit
-import com.example.playlistmaker.data.dto.TrackDto
+import com.example.playlistmaker.data.dto.SearchHistoryItem
 import com.example.playlistmaker.data.extension.TrackListMapper
 import com.example.playlistmaker.data.extension.TrackMapper
 import com.example.playlistmaker.domain.models.Track
@@ -17,27 +17,26 @@ class SearchHistoryRepositoryImpl(
 ) : SearchHistoryRepository {
 
     override fun addTrackToHistory(track: Track) {
-        val trackDto = TrackMapper.domainToDataModel(track)
-        val history: List<TrackDto> = TrackListMapper.domainToDataModel(getTracksHistory())
-        val historyDto = history.toMutableList()
+        val historyItem = TrackMapper.trackToSearchHistoryItem(track)
+        val history: MutableList<SearchHistoryItem> = TrackListMapper.trackListToSearchItemList(getTracksHistory()).toMutableList()
 
-        historyDto.removeAll { it.trackId == track.trackId }
-        historyDto.add(0, trackDto)
+        history.removeAll { it.trackId == track.trackId }
+        history.add(0, historyItem)
 
-        if (historyDto.size > MAX_SIZE_HISTORY) {
-            historyDto.removeAt(MAX_SIZE_HISTORY)
+        if (history.size > MAX_SIZE_HISTORY) {
+            history.removeAt(MAX_SIZE_HISTORY)
         }
         sharedPrefs.edit {
-            putString(KEY_HISTORY, gson.toJson(historyDto))
+            putString(KEY_HISTORY, gson.toJson(history))
         }
     }
 
     override fun getTracksHistory(): List<Track> {
         val json = sharedPrefs.getString(KEY_HISTORY, null)
-        val type = object : TypeToken<List<TrackDto>>() {}.type
-        val trackListDto: List<TrackDto> = gson.fromJson(json, type) ?: listOf()
+        val type = object : TypeToken<List<SearchHistoryItem>>() {}.type
+        val searchItemList: List<SearchHistoryItem> = gson.fromJson(json, type) ?: listOf()
 
-        return TrackListMapper.dataToDomainModel(trackListDto)
+        return TrackListMapper.searchItemListToTrackList(searchItemList)
     }
 
     override fun clearTracksHistory() {
