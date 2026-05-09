@@ -2,12 +2,11 @@ package com.example.playlistmaker.domain.models
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.google.gson.annotations.SerializedName
 
 data class Track(
     val trackName: String?,
     val artistName: String?,
-    val trackTime: String?,
+    val trackTimeMillis: Int,
     val artworkUrl100: String?,
     val trackId: Long?,
     val collectionName: String?,
@@ -15,12 +14,12 @@ data class Track(
     val primaryGenreName: String?,
     val country: String?,
     val previewUrl: String?
-): Parcelable {
+) : Parcelable {
 
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readString(),
-        parcel.readString(),
+        parcel.readInt(),
         parcel.readString(),
         parcel.readLong(),
         parcel.readString(),
@@ -33,7 +32,7 @@ data class Track(
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(trackName)
         parcel.writeString(artistName)
-        parcel.writeString(trackTime)
+        parcel.writeInt(trackTimeMillis)
         parcel.writeString(artworkUrl100)
         parcel.writeLong(trackId ?: 0)
         parcel.writeString(collectionName)

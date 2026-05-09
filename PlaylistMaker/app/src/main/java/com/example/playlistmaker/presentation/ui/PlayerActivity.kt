@@ -15,21 +15,12 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.example.playlistmaker.Creator
 import com.example.playlistmaker.R
-import com.example.playlistmaker.domain.api.MediaPlayerInteractor
-import com.example.playlistmaker.domain.impl.MediaPlayerInteractorImpl
 import com.example.playlistmaker.domain.models.Track
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerActivity : AppCompatActivity() {
-
-    companion object {
-        private const val EXTRA_TRACK = "track"
-        private const val DEFAULT_TIME = "00:00"
-    }
-
     private lateinit var backBtn: ImageButton
     private lateinit var trackCover: ImageView
     private lateinit var trackName: TextView
@@ -45,9 +36,11 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var releaseDate: TextView
     private lateinit var trackGenre: TextView
     private lateinit var country: TextView
-    private var currentTrack: Track? = null
-    private lateinit var mediaPlayer: MediaPlayerInteractor
-
+    private lateinit var currentTrack: Track
+    private val mediaPlayer = MediaPlayer()
+    private var playerState = STATE_DEFAULT
+    private lateinit var handler: Handler
+    private lateinit var playbackTime: Runnable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,12 +59,12 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        mediaPlayer.pausePlayer()
+        pausePlayer()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaPlayer.removeCallBacks()
+        handler.removeCallbacks(playbackTime)
         mediaPlayer.release()
     }
 
@@ -95,16 +88,20 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun initPlayer() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)
+            currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)!!
         }
-        mediaPlayer = Creator.provideMediaPlayerInteractor(currentTrack, playStopBtn, timeBelowPlayStopBtn)
-        mediaPlayer.preparePlayer()
+        handler = Handler(Looper.getMainLooper())
+        playbackTime = Runnable {
+            updatePlaybackTime()
+            handler.postDelayed(playbackTime, DELAY)
+        }
+        preparePlayer()
     }
 
     private fun setListeners() {
         backBtn.setOnClickListener { finish() }
         playStopBtn.setOnClickListener {
-            mediaPlayer.playbackControl()
+            playbackControl()
         }
     }
 
@@ -116,19 +113,78 @@ class PlayerActivity : AppCompatActivity() {
             .transform(RoundedCorners(8))
             .into(trackCover)
 
-        val year = currentTrack?.releaseDate?.substring(0, 4)
-        trackName.text = currentTrack?.trackName
-        artistName.text = currentTrack?.artistName
-        trackTime.text = currentTrack?.trackTime
+        val year = currentTrack.releaseDate?.substring(0, 4)
+
+        trackName.text = currentTrack.trackName
+        artistName.text = currentTrack.artistName
+        trackTime.text = formatMillisToString(currentTrack.trackTimeMillis)
         timeBelowPlayStopBtn.text = DEFAULT_TIME
-        collectionName.text = currentTrack?.collectionName
+        collectionName.text = currentTrack.collectionName
         releaseDate.text = year
-        trackGenre.text = currentTrack?.primaryGenreName
-        country.text = currentTrack?.country
+        trackGenre.text = currentTrack.primaryGenreName
+        country.text = currentTrack.country
 
     }
+    private fun preparePlayer() {
+        mediaPlayer.setDataSource(currentTrack.previewUrl)
+        mediaPlayer.prepareAsync()
+        mediaPlayer.setOnPreparedListener {
+            playerState = STATE_PREPARED
+        }
+        mediaPlayer.setOnCompletionListener {
+            playStopBtn.setImageResource(R.drawable.ic_play_btn_100)
+            playerState = STATE_PREPARED
+            handler.removeCallbacks(playbackTime)
+            timeBelowPlayStopBtn.text = DEFAULT_TIME
+        }
+    }
 
+    private fun startPlayer() {
+        mediaPlayer.start()
+        playStopBtn.setImageResource(R.drawable.ic_stop_btn_100)
+        playerState = STATE_PLAYING
+        handler.post(playbackTime)
+    }
+
+    private fun pausePlayer() {
+        mediaPlayer.pause()
+        handler.removeCallbacks(playbackTime)
+        playStopBtn.setImageResource(R.drawable.ic_play_btn_100)
+        playerState = STATE_PAUSED
+    }
+
+    private fun playbackControl() {
+        when (playerState) {
+            STATE_PLAYING -> {
+                pausePlayer()
+            }
+
+            STATE_PREPARED, STATE_PAUSED -> {
+                startPlayer()
+            }
+        }
+    }
+
+    private fun updatePlaybackTime() {
+        val time = SimpleDateFormat("mm:ss", Locale.getDefault()).format(mediaPlayer.currentPosition)
+        timeBelowPlayStopBtn.text = time
+    }
     private fun getCoverArtwork() =
-        currentTrack?.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
+        currentTrack.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
 
+    private fun formatMillisToString(millis: Int): String {
+        val minutes = (millis / 1000) / 60
+        val seconds = (millis / 1000) % 60
+        return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+    }
+
+    companion object {
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
+        private const val EXTRA_TRACK = "track"
+        private const val DEFAULT_TIME = "00:00"
+        private const val DELAY = 500L
+    }
 }

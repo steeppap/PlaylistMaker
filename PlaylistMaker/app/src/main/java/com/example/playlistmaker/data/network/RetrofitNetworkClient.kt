@@ -8,10 +8,6 @@ import com.example.playlistmaker.data.dto.Response
 
 
 class RetrofitNetworkClient : NetworkClient {
-    companion object {
-        private const val I_TUNES_BASE_URL = "https://itunes.apple.com"
-        private const val BAD_REQUEST_CODE = 400
-    }
 
     val iTunesService = Creator.createITunesService(I_TUNES_BASE_URL)
 
@@ -23,5 +19,9 @@ class RetrofitNetworkClient : NetworkClient {
         } else {
             return Response().apply { resultCode = BAD_REQUEST_CODE }
         }
+    }
+    companion object {
+        private const val I_TUNES_BASE_URL = "https://itunes.apple.com"
+        private const val BAD_REQUEST_CODE = 400
     }
 }

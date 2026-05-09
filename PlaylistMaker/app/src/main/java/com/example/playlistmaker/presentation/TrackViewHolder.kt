@@ -16,7 +16,7 @@ class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val trackCoverView: ImageView = itemView.findViewById(R.id.track_cover)
 
     fun bind(model: Track) {
-        trackTimeView.text = model.trackTime
+        trackTimeView.text = formatMillisToString(model.trackTimeMillis)
         trackNameView.text = model.trackName
         artistNameView.text = model.artistName
 
@@ -26,5 +26,11 @@ class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             .fitCenter()
             .transform(RoundedCorners(2))
             .into(trackCoverView)
+    }
+
+    private fun formatMillisToString(millis: Int): String {
+        val minutes = (millis / 1000) / 60
+        val seconds = (millis / 1000) % 60
+        return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
     }
 }

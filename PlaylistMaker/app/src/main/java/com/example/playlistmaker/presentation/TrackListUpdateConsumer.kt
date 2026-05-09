@@ -1,7 +1,6 @@
 package com.example.playlistmaker.presentation
 
 import android.app.Activity
-import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -17,9 +16,6 @@ class TrackListUpdateConsumer(
     private val nothingFoundError: LinearLayout,
     private val progressBar: ProgressBar
 ) : TracksSearchInteractor.TracksConsumer {
-    companion object {
-        private const val COMPLETE_CODE = 200
-    }
 
     override fun consume(foundTracks: Pair<List<Track>, Int>) {
         val tracks = foundTracks.first
@@ -48,5 +44,8 @@ class TrackListUpdateConsumer(
                 }
             }
         }
+    }
+    companion object {
+        private const val COMPLETE_CODE = 200
     }
 }

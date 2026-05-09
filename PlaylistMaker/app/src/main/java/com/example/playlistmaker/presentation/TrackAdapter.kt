@@ -16,10 +16,6 @@ class TrackAdapter(
     private val onItemClick: ((Track) -> Unit)? = null
 ) : RecyclerView.Adapter<TrackViewHolder>() {
 
-    companion object {
-        private const val EXTRA_TRACK = "track"
-        private const val CLICK_DEBOUNCE_DELAY = 1000L
-    }
     private val handler = Handler(Looper.getMainLooper())
     private var isClickAllowed = true
 
@@ -64,5 +60,9 @@ class TrackAdapter(
             handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
         }
         return current
+    }
+    companion object {
+        private const val EXTRA_TRACK = "track"
+        private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }

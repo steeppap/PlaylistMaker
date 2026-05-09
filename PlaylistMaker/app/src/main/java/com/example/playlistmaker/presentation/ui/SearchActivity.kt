@@ -27,10 +27,6 @@ import com.example.playlistmaker.presentation.TrackListUpdateConsumer
 
 
 class SearchActivity : AppCompatActivity() {
-    companion object {
-        private const val EDIT_TEXT_KEY = "editTextKey"
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L
-    }
 
     private lateinit var editText: EditText
     private lateinit var backButton: Button
@@ -158,6 +154,7 @@ class SearchActivity : AppCompatActivity() {
             nothingFoundError,
             progressBar
         )
+
         textWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
 
@@ -227,5 +224,9 @@ class SearchActivity : AppCompatActivity() {
         if (lastSearchQuery.isNotBlank()) {
             handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
         }
+    }
+    companion object {
+        private const val EDIT_TEXT_KEY = "editTextKey"
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
     }
 }
