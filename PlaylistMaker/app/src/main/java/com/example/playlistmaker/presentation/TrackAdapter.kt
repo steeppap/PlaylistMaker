@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation
 
 import android.content.Intent
 import android.os.Handler
@@ -6,16 +6,16 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.models.Track
+import com.example.playlistmaker.presentation.TrackViewHolder
+import com.example.playlistmaker.presentation.ui.PlayerActivity
 
 class TrackAdapter(
     private val trackList: MutableList<Track>,
     private val onItemClick: ((Track) -> Unit)? = null
 ) : RecyclerView.Adapter<TrackViewHolder>() {
 
-    companion object {
-        private const val EXTRA_TRACK = "track"
-        private const val CLICK_DEBOUNCE_DELAY = 1000L
-    }
     private val handler = Handler(Looper.getMainLooper())
     private var isClickAllowed = true
 
@@ -41,7 +41,6 @@ class TrackAdapter(
                 onItemClick?.invoke(trackList[position])
             }
         }
-
     }
 
     override fun getItemCount(): Int {
@@ -61,5 +60,9 @@ class TrackAdapter(
             handler.postDelayed({ isClickAllowed = true }, CLICK_DEBOUNCE_DELAY)
         }
         return current
+    }
+    companion object {
+        private const val EXTRA_TRACK = "track"
+        private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }

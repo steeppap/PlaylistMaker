@@ -1,20 +1,19 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.ui
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
 import android.widget.Switch
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.app.UiModeManager.MODE_NIGHT_YES
-import android.app.UiModeManager.MODE_NIGHT_NO
-import android.content.ActivityNotFoundException
-import android.net.Uri
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
+import com.example.playlistmaker.Creator
+import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.api.ThemeInteractor
+import androidx.core.net.toUri
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -23,7 +22,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var shareTheAppButton: Button
     private lateinit var writeToSupportButton: Button
     private lateinit var userAgreementButton: Button
-
+    private lateinit var themeInteractor: ThemeInteractor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +35,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         initViews()
+        themeInteractor = Creator.provideThemeInteractor(this)
         setListeners()
     }
 
@@ -52,22 +52,27 @@ class SettingsActivity : AppCompatActivity() {
             finish()
         }
 
-        darkModeSwitch.setOnCheckedChangeListener { switcher, сhecked ->
-            (applicationContext as App).switchTheme(сhecked)
+        darkModeSwitch.setOnCheckedChangeListener { switcher, _ ->
+            val enabled = themeInteractor.isDarkModeEnabled()
+            themeInteractor.setDarkModeEnabled(!enabled)
         }
 
         shareTheAppButton.setOnClickListener {
-            val intent = Intent(Intent.ACTION_SEND)
-            intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.url_to_the_course))
-            intent.type = "text/plain"
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, getString(R.string.url_to_the_course))
+            }
             startActivity(Intent.createChooser(intent, null))
         }
 
         writeToSupportButton.setOnClickListener {
-            val intent = Intent(Intent.ACTION_SENDTO)
-            intent.data = Uri.parse("mailto:${getString(R.string.support_email)}")
-            intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.text_to_support_message))
-            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.title_to_support_message))
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_EMAIL, arrayOf(getString(R.string.support_email)))
+                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.title_to_support_message))
+                putExtra(Intent.EXTRA_TEXT, getString(R.string.text_to_support_message))
+            }
+
             try {
                 startActivity(intent)
             } catch (e: ActivityNotFoundException) {
@@ -80,8 +85,9 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         userAgreementButton.setOnClickListener {
-            val intent = Intent(android.content.Intent.ACTION_VIEW)
-            intent.data = Uri.parse(getString(R.string.url_to_the_offer))
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = getString(R.string.url_to_the_offer).toUri()
+            }
             startActivity(intent)
         }
     }

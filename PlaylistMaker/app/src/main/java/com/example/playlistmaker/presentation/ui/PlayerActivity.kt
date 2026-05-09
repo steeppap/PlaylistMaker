@@ -1,10 +1,10 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.ui
 
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -15,21 +15,12 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.models.Track
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class PlayerActivity : AppCompatActivity() {
-
-    companion object {
-        private const val EXTRA_TRACK = "track"
-        private const val STATE_DEFAULT = 0
-        private const val STATE_PREPARED = 1
-        private const val STATE_PLAYING = 2
-        private const val STATE_PAUSED = 3
-        private const val DEFAULT_TIME = "00:00"
-        private const val DELAY = 500L
-    }
-
     private lateinit var backBtn: ImageButton
     private lateinit var trackCover: ImageView
     private lateinit var trackName: TextView
@@ -45,7 +36,7 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var releaseDate: TextView
     private lateinit var trackGenre: TextView
     private lateinit var country: TextView
-    private var currentTrack: Track? = null
+    private lateinit var currentTrack: Track
     private val mediaPlayer = MediaPlayer()
     private var playerState = STATE_DEFAULT
     private lateinit var handler: Handler
@@ -93,11 +84,12 @@ class PlayerActivity : AppCompatActivity() {
         releaseDate = findViewById(R.id.releaseDate)
         trackGenre = findViewById(R.id.track_genre)
         country = findViewById(R.id.track_country)
-
     }
 
-    private fun initPlayer(){
-        currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)
+    private fun initPlayer() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)!!
+        }
         handler = Handler(Looper.getMainLooper())
         playbackTime = Runnable {
             updatePlaybackTime()
@@ -121,25 +113,20 @@ class PlayerActivity : AppCompatActivity() {
             .transform(RoundedCorners(8))
             .into(trackCover)
 
-        val currentTrackTime = SimpleDateFormat("mm:ss", Locale.getDefault())
-            .format(currentTrack?.trackTimeMillis)
-        val year = currentTrack?.releaseDate?.substring(0, 4)
-        trackName.text = currentTrack?.trackName
-        artistName.text = currentTrack?.artistName
-        trackTime.text = currentTrackTime
+        val year = currentTrack.releaseDate?.substring(0, 4)
+
+        trackName.text = currentTrack.trackName
+        artistName.text = currentTrack.artistName
+        trackTime.text = formatMillisToString(currentTrack.trackTimeMillis)
         timeBelowPlayStopBtn.text = DEFAULT_TIME
-        collectionName.text = currentTrack?.collectionName
+        collectionName.text = currentTrack.collectionName
         releaseDate.text = year
-        trackGenre.text = currentTrack?.primaryGenreName
-        country.text = currentTrack?.country
+        trackGenre.text = currentTrack.primaryGenreName
+        country.text = currentTrack.country
 
     }
-
-    private fun getCoverArtwork() =
-        currentTrack?.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
-
     private fun preparePlayer() {
-        mediaPlayer.setDataSource(currentTrack?.previewUrl)
+        mediaPlayer.setDataSource(currentTrack.previewUrl)
         mediaPlayer.prepareAsync()
         mediaPlayer.setOnPreparedListener {
             playerState = STATE_PREPARED
@@ -181,5 +168,23 @@ class PlayerActivity : AppCompatActivity() {
     private fun updatePlaybackTime() {
         val time = SimpleDateFormat("mm:ss", Locale.getDefault()).format(mediaPlayer.currentPosition)
         timeBelowPlayStopBtn.text = time
+    }
+    private fun getCoverArtwork() =
+        currentTrack.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
+
+    private fun formatMillisToString(millis: Int): String {
+        val minutes = (millis / 1000) / 60
+        val seconds = (millis / 1000) % 60
+        return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+    }
+
+    companion object {
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
+        private const val EXTRA_TRACK = "track"
+        private const val DEFAULT_TIME = "00:00"
+        private const val DELAY = 500L
     }
 }

@@ -1,6 +1,5 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation.ui
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,24 +17,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import kotlin.toString
+import com.example.playlistmaker.Creator
+import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.api.SearchHistoryInteractor
+import com.example.playlistmaker.domain.api.TracksSearchInteractor
+import com.example.playlistmaker.domain.models.Track
+import com.example.playlistmaker.presentation.TrackAdapter
+import com.example.playlistmaker.presentation.TrackListUpdateConsumer
+
 
 class SearchActivity : AppCompatActivity() {
-    companion object {
-        private const val I_TUNES_BASE_URL = "https://itunes.apple.com"
-        private const val EDIT_TEXT_KEY = "editTextKey"
-        private const val COMPLETE_CODE = 200
-        private const val FAIL_CODE = 0
-        private const val SEARCH_DEBOUNCE_DELAY = 2000L
-    }
 
-    private lateinit var retrofit: Retrofit
-    private lateinit var iTunesService: ITunesApi
     private lateinit var editText: EditText
     private lateinit var backButton: Button
     private lateinit var updateButton: Button
@@ -52,11 +44,12 @@ class SearchActivity : AppCompatActivity() {
     private lateinit var trackListAdapter: TrackAdapter
     private lateinit var historyAdapter: TrackAdapter
     private var lastSearchQuery: String = ""
-    private lateinit var prefs: SharedPreferences
-    private lateinit var searchHistory: SearchHistory
     private lateinit var progressBar: ProgressBar
     private lateinit var handler: Handler
     private lateinit var searchRunnable: Runnable
+    private lateinit var tracksSearchInteractor: TracksSearchInteractor
+    private lateinit var tracksConsumer: TracksSearchInteractor.TracksConsumer
+    private lateinit var searchHistoryInteractor: SearchHistoryInteractor
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,10 +109,11 @@ class SearchActivity : AppCompatActivity() {
         }
 
         clearHistoryButton.setOnClickListener {
-            searchHistory.clear()
-            historyAdapter.updateTrackList(searchHistory.getHistory())
+            searchHistoryInteractor.clearTracksHistory()
+            historyAdapter.updateTrackList(searchHistoryInteractor.getTracksHistory())
             historyView.visibility = View.GONE
         }
+
         editText.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
                 showHistory()
@@ -134,26 +128,32 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun initSearchActivity() {
-        retrofit = Retrofit.Builder()
-            .baseUrl(I_TUNES_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        iTunesService = retrofit.create(ITunesApi::class.java)
-        prefs = getSharedPreferences(App.PREFS_NAME, MODE_PRIVATE)
-        searchHistory = SearchHistory(prefs)
+        tracksSearchInteractor = Creator.provideTracksSearchInteractor()
+        searchHistoryInteractor = Creator.provideSearchHistoryInteractor(this)
         handler = Handler(Looper.getMainLooper())
         searchRunnable = Runnable { search(lastSearchQuery) }
 
         trackListAdapter = TrackAdapter(trackList) { track ->
-            searchHistory.addTrack(track)
+            searchHistoryInteractor.addTrackToHistory(track)
         }
 
-        historyAdapter = TrackAdapter(searchHistory.getHistory().toMutableList()) { track ->
-            searchHistory.addTrack(track)
-            showHistory()
-        }
+
+        historyAdapter =
+            TrackAdapter(searchHistoryInteractor.getTracksHistory().toMutableList()) { track ->
+                searchHistoryInteractor.addTrackToHistory(track)
+                showHistory()
+            }
+
         recyclerTrackList.adapter = trackListAdapter
         recyclerHistory.adapter = historyAdapter
+        tracksConsumer = TrackListUpdateConsumer(
+            this,
+            trackListAdapter,
+            recyclerTrackList,
+            connectionError,
+            nothingFoundError,
+            progressBar
+        )
 
         textWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -185,42 +185,14 @@ class SearchActivity : AppCompatActivity() {
         }
     }
 
-    private fun search(query: String) {
-        lastSearchQuery = query
+    private fun search(expression: String) {
+
+        tracksSearchInteractor.search(expression, tracksConsumer)
+
         nothingFoundError.visibility = View.GONE
         connectionError.visibility = View.GONE
         recyclerTrackList.visibility = View.VISIBLE
         progressBar.visibility = View.VISIBLE
-
-        if (lastSearchQuery.isNotEmpty()) {
-            iTunesService.search(lastSearchQuery).enqueue(object : Callback<ITunesResponse> {
-                override fun onResponse(
-                    call: Call<ITunesResponse>,
-                    response: Response<ITunesResponse>
-                ) {
-                    if (response.code() == COMPLETE_CODE) {
-                        trackList.clear()
-                        progressBar.visibility = View.GONE
-                        if (response.body()?.results?.isNotEmpty() == true) {
-                            trackList.addAll(response.body()?.results!!)
-                            trackListAdapter.notifyDataSetChanged()
-                        }
-                        if (trackList.isEmpty()) {
-                            showError(response.code())
-                        }
-                    } else {
-                        showError(response.code())
-                    }
-                }
-
-                override fun onFailure(
-                    call: Call<ITunesResponse?>?,
-                    t: Throwable?
-                ) {
-                    showError(FAIL_CODE)
-                }
-            })
-        }
     }
 
     private fun hideKeyboard() {
@@ -228,24 +200,8 @@ class SearchActivity : AppCompatActivity() {
         inputMethodManager.hideSoftInputFromWindow(editText.windowToken, 0)
     }
 
-    private fun showError(codeError: Int) {
-        if (codeError == COMPLETE_CODE) {
-            recyclerTrackList.visibility = View.GONE
-            nothingFoundError.visibility = View.VISIBLE
-            connectionError.visibility = View.GONE
-            progressBar.visibility = View.GONE
-
-        } else {
-            recyclerTrackList.visibility = View.GONE
-            connectionError.visibility = View.VISIBLE
-            nothingFoundError.visibility = View.GONE
-            progressBar.visibility = View.GONE
-
-        }
-    }
-
     private fun showHistory() {
-        val history = searchHistory.getHistory()
+        val history = searchHistoryInteractor.getTracksHistory()
         if (history.isNotEmpty()) {
             historyAdapter.updateTrackList(history)
             historyView.visibility = View.VISIBLE
@@ -261,7 +217,6 @@ class SearchActivity : AppCompatActivity() {
 
     private fun update(lastSearchQuery: String) {
         search(lastSearchQuery)
-        connectionError.visibility = View.GONE
     }
 
     private fun searchDebounce() {
@@ -269,5 +224,9 @@ class SearchActivity : AppCompatActivity() {
         if (lastSearchQuery.isNotBlank()) {
             handler.postDelayed(searchRunnable, SEARCH_DEBOUNCE_DELAY)
         }
+    }
+    companion object {
+        private const val EDIT_TEXT_KEY = "editTextKey"
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
     }
 }

@@ -1,11 +1,11 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.data.network
 
-import okhttp3.Callback
+import com.example.playlistmaker.data.dto.ITunesResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface ITunesApi {
+interface ITunesApiService {
     @GET("/search?entity=song")
     fun search(@Query("term") text: String): Call<ITunesResponse>
 }

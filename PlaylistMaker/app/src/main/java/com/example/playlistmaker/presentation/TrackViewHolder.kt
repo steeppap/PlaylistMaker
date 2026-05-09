@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation
 
 import android.view.View
 import android.widget.ImageView
@@ -6,8 +6,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.models.Track
 
 class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val trackNameView: TextView = itemView.findViewById(R.id.track_name)
@@ -16,10 +16,9 @@ class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private val trackCoverView: ImageView = itemView.findViewById(R.id.track_cover)
 
     fun bind(model: Track) {
-        val trackTime = SimpleDateFormat("mm:ss", Locale.getDefault()).format(model.trackTimeMillis)
+        trackTimeView.text = formatMillisToString(model.trackTimeMillis)
         trackNameView.text = model.trackName
         artistNameView.text = model.artistName
-        trackTimeView.text = trackTime
 
         Glide.with(itemView)
             .load(model.artworkUrl100)
@@ -27,5 +26,11 @@ class TrackViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             .fitCenter()
             .transform(RoundedCorners(2))
             .into(trackCoverView)
+    }
+
+    private fun formatMillisToString(millis: Int): String {
+        val minutes = (millis / 1000) / 60
+        val seconds = (millis / 1000) % 60
+        return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
     }
 }
