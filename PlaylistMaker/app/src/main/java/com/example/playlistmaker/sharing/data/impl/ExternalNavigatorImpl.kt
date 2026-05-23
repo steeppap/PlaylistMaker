@@ -27,22 +27,18 @@ class ExternalNavigatorImpl(private val context: Context) : ExternalNavigator {
         context.startActivity(intent)
     }
 
-    override fun openEmail(email: String, title: String, body: String) {
+    override fun openEmail(email: String, title: String, mailBody: String, onError: (String) -> Unit) {
         val intent = Intent(Intent.ACTION_SENDTO).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
             putExtra(Intent.EXTRA_SUBJECT, title)
-            putExtra(Intent.EXTRA_TEXT, body)
+            putExtra(Intent.EXTRA_TEXT, mailBody)
         }
 
         try {
             context.startActivity(intent)
         } catch (e: ActivityNotFoundException) {
-            Toast.makeText(
-                context,
-                getString(context,R.string.toast_no_email_app),
-                Toast.LENGTH_SHORT
-            ).show()
+            onError(getString(context, R.string.toast_no_email_app))
         }
     }
 }

@@ -11,15 +11,15 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.ActivityPlayerBinding
-import com.example.playlistmaker.search.domain.models.Track
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel
+import com.example.playlistmaker.search.ui.models.TrackUiModel
 
 
 class PlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPlayerBinding
     private lateinit var viewModel: PlayerViewModel
-    private lateinit var currentTrack: Track
-
+    private lateinit var currentTrack: TrackUiModel
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPlayerBinding.inflate(layoutInflater)
@@ -30,46 +30,45 @@ class PlayerActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
+        
         initPlayerActivity()
         setListeners()
         showTrackInfo()
     }
-
+    
     override fun onPause() {
         super.onPause()
         viewModel.onPause()
     }
-
+    
     private fun initPlayerActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            currentTrack = intent.getParcelableExtra(EXTRA_TRACK, Track::class.java)!!
+            currentTrack = intent.getParcelableExtra(EXTRA_TRACK, TrackUiModel::class.java)!!
         }
         viewModel =
-            ViewModelProvider(this, PlayerViewModel.getFactory(currentTrack.previewUrl!!)).get(
-                PlayerViewModel::class.java
-            )
-        viewModel.observeProgressTime().observe(this) {
-            binding.timeBelowPlayBtn.text = it
-        }
-
-        viewModel.observePlayerState().observe(this) {
-            changeButtonIcon(it == PlayerViewModel.STATE_PLAYING)
+            ViewModelProvider(
+                this,
+                PlayerViewModel.getFactory(currentTrack.previewUrl!!)
+            )[PlayerViewModel::class.java]
+        
+        viewModel.observePlayerStateWithProgress().observe(this){
+            binding.timeBelowPlayBtn.text = it.progressTime
+            changeButtonIcon(it.playerState == PlayerViewModel.STATE_PLAYING)
         }
     }
-
+    
     private fun setListeners() {
         binding.backButton.setOnClickListener { finish() }
-
+        
         binding.playStopBtn.setOnClickListener {
             viewModel.playbackControl()
         }
     }
-
+    
     private fun changeButtonIcon(isPlaying: Boolean) {
         binding.playStopBtn.setImageResource(if (isPlaying) R.drawable.ic_stop_btn_100 else R.drawable.ic_play_btn_100)
     }
-
+    
     private fun showTrackInfo() {
         Glide.with(this)
             .load(getCoverArtwork())
@@ -77,9 +76,9 @@ class PlayerActivity : AppCompatActivity() {
             .fitCenter()
             .transform(RoundedCorners(8))
             .into(binding.trackCover)
-
+        
         val year = currentTrack.releaseDate?.substring(0, 4)
-
+        
         binding.apply {
             trackName.text = currentTrack.trackName
             artistName.text = currentTrack.artistName
@@ -89,18 +88,17 @@ class PlayerActivity : AppCompatActivity() {
             trackGenre.text = currentTrack.primaryGenreName
             trackCountry.text = currentTrack.country
         }
-
     }
-
+    
     private fun getCoverArtwork() =
         currentTrack.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
-
+    
     private fun formatMillisToString(millis: Int): String {
         val minutes = (millis / 1000) / 60
         val seconds = (millis / 1000) % 60
         return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
     }
-
+    
     companion object {
         private const val EXTRA_TRACK = "track"
     }

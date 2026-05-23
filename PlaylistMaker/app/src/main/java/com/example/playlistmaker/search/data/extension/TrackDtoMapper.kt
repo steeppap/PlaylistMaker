@@ -4,7 +4,7 @@ import com.example.playlistmaker.search.data.dto.SearchHistoryItem
 import com.example.playlistmaker.search.data.dto.TrackDto
 import com.example.playlistmaker.search.domain.models.Track
 
-object TrackMapper {
+object TrackDtoMapper {
     fun trackToSearchHistoryItem(track: Track): SearchHistoryItem{
         return SearchHistoryItem(
             trackName = track.trackName,

@@ -6,15 +6,15 @@ import android.os.Looper
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.playlistmaker.player.ui.activity.PlayerActivity
-import com.example.playlistmaker.search.domain.models.Track
+import com.example.playlistmaker.search.ui.models.TrackUiModel
 
 class TrackAdapter(
-    private var trackList: MutableList<Track>,
-    private val onItemClick: ((Track) -> Unit)? = null
+    private var trackList: List<TrackUiModel>,
+    private val onItemClick: ((TrackUiModel) -> Unit)? = null
 ) : RecyclerView.Adapter<TrackViewHolder>() {
-    
     private val handler = Handler(Looper.getMainLooper())
     private var isClickAllowed = true
+    
     
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder =
@@ -40,9 +40,8 @@ class TrackAdapter(
         return trackList.size
     }
     
-    fun updateTrackList(newTrackList: List<Track>) {
-        trackList.clear()
-        trackList.addAll(newTrackList)
+    fun updateTrackList(newTrackList: List<TrackUiModel>) {
+        this.trackList = newTrackList
         notifyDataSetChanged()
     }
     

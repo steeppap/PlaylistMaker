@@ -1,15 +1,13 @@
 package com.example.playlistmaker.search.data.network
 
-
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.search.data.NetworkClient
+import com.example.playlistmaker.search.data.creator.SearchDataCreator
 import com.example.playlistmaker.search.data.dto.ITunesRequest
 import com.example.playlistmaker.search.data.dto.Response
 
-
 class RetrofitNetworkClient : NetworkClient {
 
-    val iTunesService = Creator.createITunesService(I_TUNES_BASE_URL)
+    val iTunesService = SearchDataCreator.createITunesService(I_TUNES_BASE_URL)
 
     override fun doRequest(dto: Any): Response {
         if (dto is ITunesRequest) {

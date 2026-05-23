@@ -3,8 +3,8 @@ package com.example.playlistmaker.search.data.impl
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.example.playlistmaker.search.data.dto.SearchHistoryItem
-import com.example.playlistmaker.search.data.extension.TrackListMapper
-import com.example.playlistmaker.search.data.extension.TrackMapper
+import com.example.playlistmaker.search.data.extension.TrackListDtoMapper
+import com.example.playlistmaker.search.data.extension.TrackDtoMapper
 import com.example.playlistmaker.search.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.search.domain.models.Track
 import com.google.gson.Gson
@@ -16,8 +16,8 @@ class SearchHistoryRepositoryImpl(
 ) : SearchHistoryRepository {
 
     override fun addTrackToHistory(track: Track) {
-        val historyItem = TrackMapper.trackToSearchHistoryItem(track)
-        val history: MutableList<SearchHistoryItem> = TrackListMapper.trackListToSearchItemList(getTracksHistory()).toMutableList()
+        val historyItem = TrackDtoMapper.trackToSearchHistoryItem(track)
+        val history: MutableList<SearchHistoryItem> = TrackListDtoMapper.trackListToSearchItemList(getTracksHistory()).toMutableList()
 
         history.removeAll { it.trackId == track.trackId }
         history.add(0, historyItem)
@@ -35,7 +35,7 @@ class SearchHistoryRepositoryImpl(
         val type = object : TypeToken<List<SearchHistoryItem>>() {}.type
         val searchItemList: List<SearchHistoryItem> = gson.fromJson(json, type) ?: listOf()
 
-        return TrackListMapper.searchItemListToTrackList(searchItemList)
+        return TrackListDtoMapper.searchItemListToTrackList(searchItemList)
     }
 
     override fun clearTracksHistory() {

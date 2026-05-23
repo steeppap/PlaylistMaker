@@ -7,12 +7,12 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.TrackCardBinding
-import com.example.playlistmaker.search.domain.models.Track
+import com.example.playlistmaker.search.ui.models.TrackUiModel
 
 class TrackViewHolder(private val binding: TrackCardBinding) :
     RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(model: Track) {
+    fun bind(model: TrackUiModel) {
         binding.apply {
             trackTime.text = formatMillisToString(model.trackTimeMillis)
             trackName.text = model.trackName
