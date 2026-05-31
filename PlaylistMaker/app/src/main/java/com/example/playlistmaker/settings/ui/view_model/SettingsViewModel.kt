@@ -40,11 +40,18 @@ class SettingsViewModel(
     }
     
     fun writeToSupport() {
-        sharingInteractor.writeToSupport{ state ->
-            toastStateLiveData.postValue(state)
+        val result = sharingInteractor.writeToSupport()
+        if (result.isSuccess) {
+            toastStateLiveData.postValue(ToastState.HideToast)
+        } else {
+            val exception = result.exceptionOrNull()
+            toastStateLiveData.postValue(
+                ToastState.ShowToast(exception?.message ?: "Unknown error")
+            )
         }
     }
-    fun hideToast(){
+    
+    fun hideToast() {
         toastStateLiveData.postValue(ToastState.HideToast)
     }
     

@@ -8,16 +8,22 @@ import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PAUSED
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PLAYING
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PREPARED
+import com.example.playlistmaker.search.domain.api.SearchHistoryRepository
+import com.example.playlistmaker.search.domain.models.Track
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class MediaPlayerInteractorImpl(private val url: String) : MediaPlayerInteractor {
+class MediaPlayerInteractorImpl(private val repository: SearchHistoryRepository, private val previewUrl: String?) :
+    MediaPlayerInteractor {
     private var listener: MediaPlayerInteractor.MediaPlayerListener? = null
     private val mediaPlayer = MediaPlayer()
     private val handler = Handler(Looper.getMainLooper())
     private val playbackTimeRunnable = Runnable { startTimerUpdate() }
+    private var currentTrack: Track? = null
+    
     
     init {
+        
         preparePlayer()
     }
     
@@ -44,6 +50,7 @@ class MediaPlayerInteractorImpl(private val url: String) : MediaPlayerInteractor
     override fun removeListener() {
         listener = null
     }
+    
     override fun updatePlayerState(newState: Int) {
         listener?.onStateChanged(newState)
     }
@@ -52,13 +59,20 @@ class MediaPlayerInteractorImpl(private val url: String) : MediaPlayerInteractor
         listener?.onProgressUpdated(progress)
     }
     
+    override fun getTrackByPreviewUrl(){
+        val track = repository.getTrackByPreviewUrl(previewUrl)
+        currentTrack = track
+        
+        track?.let { listener?.onTrackLoaded(it) }
+    }
+    
     override fun release() {
         mediaPlayer.release()
         resetTimer()
     }
     
     private fun preparePlayer() {
-        mediaPlayer.setDataSource(url)
+        mediaPlayer.setDataSource(previewUrl)
         mediaPlayer.prepareAsync()
         
         mediaPlayer.setOnPreparedListener {
@@ -99,7 +113,8 @@ class MediaPlayerInteractorImpl(private val url: String) : MediaPlayerInteractor
     private fun pauseTimer() {
         handler.removeCallbacks(playbackTimeRunnable)
     }
-    companion object{
+    
+    companion object {
         const val DELAY = 500L
     }
 }

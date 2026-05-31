@@ -1,6 +1,8 @@
 package com.example.playlistmaker.search.ui.activity
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
@@ -11,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import com.example.playlistmaker.R
+import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.databinding.ActivitySearchBinding
 import com.example.playlistmaker.search.ui.TrackAdapter
 import com.example.playlistmaker.search.ui.view_model.SearchViewModel
@@ -18,11 +21,12 @@ import com.example.playlistmaker.search.ui.view_model.TrackSearchState
 
 class SearchActivity : AppCompatActivity() {
     private lateinit var bindingSearch: ActivitySearchBinding
-    private var inputText: String = ""
     private lateinit var textWatcher: TextWatcher
     private lateinit var trackListAdapter: TrackAdapter
     private lateinit var historyAdapter: TrackAdapter
     private lateinit var viewModel: SearchViewModel
+    private val handler = Handler(Looper.getMainLooper())
+    private var currentSearchRunnable: Runnable? = null
     
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,19 +50,25 @@ class SearchActivity : AppCompatActivity() {
     
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString(EDIT_TEXT_KEY, inputText)
     }
     
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        val savedText = savedInstanceState.getString(EDIT_TEXT_KEY)
-        bindingSearch.searchEditText.setText(savedText)
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        currentSearchRunnable?.let { handler.removeCallbacks(it) }
+        bindingSearch.searchEditText.removeTextChangedListener(textWatcher)
     }
     
     private fun initSearchActivity() {
         
         viewModel =
-            ViewModelProvider(this, SearchViewModel.getFactory(this))[SearchViewModel::class.java]
+            ViewModelProvider(
+                this,
+                SearchViewModel.getFactory(this)
+            )[SearchViewModel::class.java]
         
         trackListAdapter = TrackAdapter(emptyList()) { track ->
             viewModel.addTrackToHistory(track)
@@ -77,8 +87,30 @@ class SearchActivity : AppCompatActivity() {
         viewModel.observeSearchState().observe(this) {
             renderUiState(it)
         }
+        
         viewModel.observeTrackList().observe(this) { trackList ->
             trackListAdapter.updateTrackList(trackList)
+        }
+        
+        viewModel.observeClearButtonVisible().observe(this) { visibility ->
+            bindingSearch.clearBtn.isVisible = visibility
+        }
+        
+        viewModel.observeSearchQuery().observe(this) { currentText ->
+            val currentEditTextText = bindingSearch.searchEditText.text.toString()
+            if (currentEditTextText != currentText) {
+                bindingSearch.searchEditText.setText(currentText)
+            }
+            
+            if (currentText.isEmpty()) {
+                currentSearchRunnable?.let { handler.removeCallbacks(it) }
+            } else {
+                searchDebounce(currentText, SEARCH_DEBOUNCE_DELAY)
+            }
+        }
+        
+        viewModel.observeHistory().observe(this) { trackListHistory ->
+            historyAdapter.updateTrackList(trackListHistory)
         }
         
         textWatcher = object : TextWatcher {
@@ -87,33 +119,14 @@ class SearchActivity : AppCompatActivity() {
             }
             
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                inputText = bindingSearch.searchEditText.text.toString().trim()
-                bindingSearch.clearBtn.isVisible = clearButtonVisibility(s)
-                viewModel.onTextChanged(inputText)
+                val newText = s.toString().trim()
+                viewModel.updateSearchQuery(newText)
+                
             }
             
             override fun afterTextChanged(s: Editable?) {
-                inputText = s.toString()
-            }
-        }
-    }
-    
-    private fun observeHistory() {
-        viewModel.observeHistory().observe(this) { trackListHistory ->
             
-            if (trackListHistory.isNotEmpty() && inputText.isEmpty()) {
-                bindingSearch.apply {
-                    historyView.isVisible = true
-                    recyclerViewTrackList.isVisible = false
-                    connectionError.connectionError.isVisible = false
-                    nothingFound.nothingFound.isVisible = false
-                }
-            } else {
-                bindingSearch.apply {
-                    historyView.isVisible = false
-                }
             }
-            historyAdapter.updateTrackList(trackListHistory)
         }
     }
     
@@ -142,13 +155,21 @@ class SearchActivity : AppCompatActivity() {
             searchEditText.addTextChangedListener(textWatcher)
             
             connectionError.updateBtn.setOnClickListener {
-                viewModel.searchUpdate(inputText)
+                val currentQuery = viewModel.observeSearchQuery().value.toString()
+                viewModel.search(currentQuery)
             }
         }
     }
     
-    private fun clearButtonVisibility(s: CharSequence?): Boolean {
-        return !s.isNullOrEmpty()
+    private fun searchDebounce(query: String, debounceDelay: Long) {
+        currentSearchRunnable?.let {
+            handler.removeCallbacks(it)
+        }
+        
+        currentSearchRunnable = Runnable {
+            viewModel.search(query)
+        }
+        handler.postDelayed(currentSearchRunnable!!, debounceDelay)
     }
     
     private fun hideKeyboard() {
@@ -216,14 +237,18 @@ class SearchActivity : AppCompatActivity() {
             recyclerViewTrackList.isVisible = false
             historyView.isVisible = false
         }
-        trackListAdapter.updateTrackList(emptyList())
     }
     
     private fun showHistory() {
-        observeHistory()
+        bindingSearch.apply {
+            historyView.isVisible = true
+            recyclerViewTrackList.isVisible = false
+            connectionError.connectionError.isVisible = false
+            nothingFound.nothingFound.isVisible = false
+        }
     }
     
     companion object {
-        private const val EDIT_TEXT_KEY = "editTextKey"
+        private const val SEARCH_DEBOUNCE_DELAY = 1500L
     }
 }

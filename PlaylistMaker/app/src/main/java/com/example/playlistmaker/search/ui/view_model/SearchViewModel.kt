@@ -1,8 +1,6 @@
 package com.example.playlistmaker.search.ui.view_model
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -22,53 +20,35 @@ class SearchViewModel(
     val tracksSearchInteractor: TracksSearchInteractor
 ) : ViewModel() {
     private val trackListHistory: List<TrackUiModel> = getTracksHistory()
-    private var currentSearchRunnable: Runnable? = null
-    private var query: String = ""
     private val searchStateLiveData = MutableLiveData<TrackSearchState>(TrackSearchState.Default)
     fun observeSearchState(): LiveData<TrackSearchState> = searchStateLiveData
     private val trackListLiveData = MutableLiveData(emptyList<TrackUiModel>())
     fun observeTrackList(): LiveData<List<TrackUiModel>> = trackListLiveData
     private val historyLiveData = MutableLiveData(trackListHistory)
     fun observeHistory(): LiveData<List<TrackUiModel>> = historyLiveData
+    private val searchQueryLiveData = MutableLiveData("")
+    fun observeSearchQuery(): LiveData<String> = searchQueryLiveData
+    private val clearButtonVisibleLiveData = MutableLiveData(false)
+    fun observeClearButtonVisible(): LiveData<Boolean> = clearButtonVisibleLiveData
     
-    val handler = Handler(Looper.getMainLooper())
-    private fun searchRunnable(query: String): Runnable {
-        return Runnable {
-            searchStateLiveData.postValue(TrackSearchState.Loading)
-            try {
-                search(query)
-            } catch (e: Exception) {
-                searchStateLiveData.postValue(
-                    TrackSearchState.Error
-                )
-            } finally {
-                currentSearchRunnable = null
-            }
-        }
-    }
     fun addTrackToHistory(trackUi: TrackUiModel) {
         searchHistoryInteractor.addTrackToHistory(TrackUiMapper.trackUiModelToTrack(trackUi))
         val updatedHistory = getTracksHistory()
         historyLiveData.postValue(updatedHistory)
     }
-    fun addTrackToHistoryFromHistoryAdapter(trackUi: TrackUiModel){
+    
+    fun addTrackToHistoryFromHistoryAdapter(trackUi: TrackUiModel) {
         addTrackToHistory(trackUi)
         searchStateLiveData.postValue(TrackSearchState.History)
     }
     
-    fun getTracksHistory():List<TrackUiModel> {
+    fun getTracksHistory(): List<TrackUiModel> {
         return TrackListUiMapper.trackListToTrackListUi(searchHistoryInteractor.getTracksHistory())
     }
-    fun onTextChanged(inputText: String) {
-        if (inputText.isEmpty()) {
-            searchStateLiveData.postValue(TrackSearchState.History)
-        } else {
-            searchStateLiveData.postValue(TrackSearchState.Default)
-        }
-        searchDebounce(inputText, SEARCH_DEBOUNCE_DELAY)
-    }
+    
     fun onSearchFocused() {
-        searchStateLiveData.postValue(TrackSearchState.History)
+        if (historyLiveData.value!!.isEmpty()) searchStateLiveData.postValue(TrackSearchState.Default) else
+            searchStateLiveData.postValue(TrackSearchState.History)
     }
     
     fun clearTracksHistory() {
@@ -77,7 +57,20 @@ class SearchViewModel(
         searchStateLiveData.postValue(TrackSearchState.Default)
     }
     
-    private fun search(query: String) {
+    fun updateSearchQuery(newQuery: String) {
+        searchQueryLiveData.postValue(newQuery)
+        
+        if (newQuery.isEmpty() && historyLiveData.value!!.isNotEmpty()) searchStateLiveData.postValue(
+            TrackSearchState.History
+        ) else searchStateLiveData.postValue(TrackSearchState.Default)
+        
+        if (newQuery.isEmpty()) clearButtonVisibleLiveData.postValue(false) else clearButtonVisibleLiveData.postValue(
+            true
+        )
+    }
+    
+    fun search(query: String) {
+        searchStateLiveData.postValue(TrackSearchState.Loading)
         
         tracksSearchInteractor.search(query, object : TracksSearchInteractor.TracksConsumer {
             override fun consume(foundTracks: Pair<List<Track>, Int>) {
@@ -93,28 +86,10 @@ class SearchViewModel(
                     searchStateLiveData.postValue(TrackSearchState.Success)
                     
                 } else {
-                    searchStateLiveData.postValue(TrackSearchState.Error)}
+                    searchStateLiveData.postValue(TrackSearchState.Error)
+                }
             }
         })
-    }
-    
-    fun searchUpdate(query: String){
-        searchStateLiveData.postValue(TrackSearchState.Loading)
-        search(query)
-    }
-    
-    fun searchDebounce(query: String, debounceDelay: Long) {
-        this.query = query
-        currentSearchRunnable?.let { handler.removeCallbacks(it) }
-        
-        if (query.isNotBlank()) {
-            currentSearchRunnable = searchRunnable(query)
-            handler.postDelayed(currentSearchRunnable!!, debounceDelay)
-        } else {
-            trackListLiveData.postValue(emptyList())
-            searchStateLiveData.postValue(TrackSearchState.History)
-            currentSearchRunnable = null
-        }
     }
     
     companion object {
@@ -122,12 +97,12 @@ class SearchViewModel(
             context: Context
         ): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val tracksSearchInteractor = Creator.provideTracksSearchInteractor()
                 val searchHistoryInteractor = Creator.provideSearchHistoryInteractor(context)
+                val tracksSearchInteractor = Creator.provideTracksSearchInteractor()
                 SearchViewModel(searchHistoryInteractor, tracksSearchInteractor)
             }
         }
+        
         private const val COMPLETE_CODE = 200
-        private const val SEARCH_DEBOUNCE_DELAY = 1500L
     }
 }

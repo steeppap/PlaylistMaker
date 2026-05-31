@@ -18,4 +18,5 @@ class SearchHistoryInteractorImpl(private val repository: SearchHistoryRepositor
     override fun clearTracksHistory() {
         repository.clearTracksHistory()
     }
+    
 }

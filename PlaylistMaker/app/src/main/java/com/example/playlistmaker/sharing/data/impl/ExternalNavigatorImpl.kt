@@ -3,7 +3,6 @@ package com.example.playlistmaker.sharing.data.impl
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.core.content.ContextCompat.getString
 import androidx.core.net.toUri
 import com.example.playlistmaker.R

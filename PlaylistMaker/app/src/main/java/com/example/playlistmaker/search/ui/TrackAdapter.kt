@@ -28,8 +28,9 @@ class TrackAdapter(
         
         holder.itemView.setOnClickListener {
             if (clickDebounce()) {
-                val intent = Intent(holder.itemView.context, PlayerActivity::class.java)
-                intent.putExtra(EXTRA_TRACK, trackList[position])
+                val intent = Intent(holder.itemView.context, PlayerActivity::class.java).apply {
+                    putExtra(EXTRA_TRACK_PREVIEW_URL, trackList[position].previewUrl)
+                }
                 holder.itemView.context.startActivity(intent)
                 onItemClick?.invoke(trackList[position])
             }
@@ -55,7 +56,7 @@ class TrackAdapter(
     }
     
     companion object {
-        private const val EXTRA_TRACK = "track"
+        private const val EXTRA_TRACK_PREVIEW_URL = "track_preview_url"
         private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }

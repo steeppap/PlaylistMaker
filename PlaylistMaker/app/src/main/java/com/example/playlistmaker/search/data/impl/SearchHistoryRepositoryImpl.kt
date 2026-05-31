@@ -14,14 +14,15 @@ class SearchHistoryRepositoryImpl(
     private val sharedPrefs: SharedPreferences,
     private val gson: Gson
 ) : SearchHistoryRepository {
-
+    
     override fun addTrackToHistory(track: Track) {
         val historyItem = TrackDtoMapper.trackToSearchHistoryItem(track)
-        val history: MutableList<SearchHistoryItem> = TrackListDtoMapper.trackListToSearchItemList(getTracksHistory()).toMutableList()
-
+        val history: MutableList<SearchHistoryItem> =
+            TrackListDtoMapper.trackListToSearchItemList(getTracksHistory()).toMutableList()
+        
         history.removeAll { it.trackId == track.trackId }
         history.add(0, historyItem)
-
+        
         if (history.size > MAX_SIZE_HISTORY) {
             history.removeAt(MAX_SIZE_HISTORY)
         }
@@ -29,19 +30,24 @@ class SearchHistoryRepositoryImpl(
             putString(KEY_HISTORY, gson.toJson(history))
         }
     }
-
+    
     override fun getTracksHistory(): List<Track> {
         val json = sharedPrefs.getString(KEY_HISTORY, null)
         val type = object : TypeToken<List<SearchHistoryItem>>() {}.type
         val searchItemList: List<SearchHistoryItem> = gson.fromJson(json, type) ?: listOf()
-
+        
         return TrackListDtoMapper.searchItemListToTrackList(searchItemList)
     }
-
+    
     override fun clearTracksHistory() {
         sharedPrefs.edit { remove(KEY_HISTORY) }
     }
-
+    
+    override fun getTrackByPreviewUrl(trackPreviewUrl: String?): Track? {
+        val tracks = getTracksHistory()
+        return tracks.find { it.previewUrl == trackPreviewUrl }
+    }
+    
     companion object {
         private const val KEY_HISTORY = "search_history"
         private const val MAX_SIZE_HISTORY = 10

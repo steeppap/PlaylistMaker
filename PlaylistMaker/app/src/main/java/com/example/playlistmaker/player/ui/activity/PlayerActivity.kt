@@ -1,6 +1,5 @@
 package com.example.playlistmaker.player.ui.activity
 
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -18,7 +17,6 @@ import com.example.playlistmaker.search.ui.models.TrackUiModel
 class PlayerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPlayerBinding
     private lateinit var viewModel: PlayerViewModel
-    private lateinit var currentTrack: TrackUiModel
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +31,6 @@ class PlayerActivity : AppCompatActivity() {
         
         initPlayerActivity()
         setListeners()
-        showTrackInfo()
     }
     
     override fun onPause() {
@@ -42,18 +39,19 @@ class PlayerActivity : AppCompatActivity() {
     }
     
     private fun initPlayerActivity() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            currentTrack = intent.getParcelableExtra(EXTRA_TRACK, TrackUiModel::class.java)!!
-        }
-        viewModel =
-            ViewModelProvider(
-                this,
-                PlayerViewModel.getFactory(currentTrack.previewUrl!!)
-            )[PlayerViewModel::class.java]
+        val trackPreviewUrl = intent.getStringExtra(EXTRA_TRACK_PREVIEW_URL)
         
-        viewModel.observePlayerStateWithProgress().observe(this){
+        viewModel = ViewModelProvider(
+            this,
+            PlayerViewModel.getFactory(this, trackPreviewUrl)
+        )[PlayerViewModel::class.java]
+        
+        viewModel.observePlayerStateWithProgress().observe(this) {
             binding.timeBelowPlayBtn.text = it.progressTime
             changeButtonIcon(it.playerState == PlayerViewModel.STATE_PLAYING)
+        }
+        viewModel.observeTrackUiModel().observe(this) {
+            showTrackInfo(it)
         }
     }
     
@@ -69,9 +67,9 @@ class PlayerActivity : AppCompatActivity() {
         binding.playStopBtn.setImageResource(if (isPlaying) R.drawable.ic_stop_btn_100 else R.drawable.ic_play_btn_100)
     }
     
-    private fun showTrackInfo() {
+    private fun showTrackInfo(currentTrack: TrackUiModel) {
         Glide.with(this)
-            .load(getCoverArtwork())
+            .load(getCoverArtwork(currentTrack))
             .placeholder(R.drawable.ic_placeholder_312)
             .fitCenter()
             .transform(RoundedCorners(8))
@@ -90,8 +88,8 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
     
-    private fun getCoverArtwork() =
-        currentTrack.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
+    private fun getCoverArtwork(track: TrackUiModel) =
+        track.artworkUrl100?.replaceAfterLast('/', "512x512bb.jpg")
     
     private fun formatMillisToString(millis: Int): String {
         val minutes = (millis / 1000) / 60
@@ -100,6 +98,6 @@ class PlayerActivity : AppCompatActivity() {
     }
     
     companion object {
-        private const val EXTRA_TRACK = "track"
+        private const val EXTRA_TRACK_PREVIEW_URL = "track_preview_url"
     }
 }

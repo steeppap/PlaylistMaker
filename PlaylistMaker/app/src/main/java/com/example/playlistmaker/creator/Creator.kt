@@ -18,7 +18,7 @@ import com.example.playlistmaker.sharing.data.impl.ExternalNavigatorImpl
 import com.example.playlistmaker.sharing.data.impl.ResourceProviderImpl
 import com.example.playlistmaker.sharing.domain.api.ExternalNavigator
 import com.example.playlistmaker.sharing.domain.api.SharingInteractor
-import com.example.playlistmaker.sharing.domain.impl.SharingInteractorImpl
+import com.example.playlistmaker.sharing.data.impl.SharingInteractorImpl
 
 object Creator {
     
@@ -38,8 +38,8 @@ object Creator {
         return SharingInteractorImpl(ResourceProviderImpl(context), getExternalNavigator(context))
     }
     
-    fun provideMediaPlayerInteractor(url: String): MediaPlayerInteractor {
-        return MediaPlayerInteractorImpl(url)
+    fun provideMediaPlayerInteractor(context: Context, trackId: String?): MediaPlayerInteractor {
+        return MediaPlayerInteractorImpl(getSearchHistoryRepository(context), trackId)
     }
     
     private fun getExternalNavigator(context: Context): ExternalNavigator {
