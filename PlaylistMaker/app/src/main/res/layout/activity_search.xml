@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.ui.SearchActivity">
+    tools:context=".search.ui.activity.SearchActivity">
 
     <LinearLayout
         style="@style/OtherScreensBackground"
@@ -91,7 +91,7 @@
             </EditText>
 
             <ImageView
-                android:id="@+id/clear_icon"
+                android:id="@+id/clear_btn"
                 style="@style/ClearIcon" />
 
         </FrameLayout>
@@ -129,8 +129,12 @@
 
             </LinearLayout>
 
-            <include layout="@layout/nothing_found_error" />
-            <include layout="@layout/connection_error" />
+            <include
+                android:id="@+id/nothingFound"
+                layout="@layout/nothing_found_error" />
+            <include
+                android:id="@+id/connectionError"
+                layout="@layout/connection_error" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:visibility="gone"
