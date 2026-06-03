@@ -14,7 +14,9 @@ import com.example.playlistmaker.search.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.search.domain.api.TracksRepository
 import com.example.playlistmaker.settings.data.ThemeRepositoryImpl
 import com.example.playlistmaker.settings.domain.api.ThemeRepository
+import com.example.playlistmaker.sharing.data.impl.ExternalNavigatorImpl
 import com.example.playlistmaker.sharing.data.impl.ResourceProviderImpl
+import com.example.playlistmaker.sharing.domain.api.ExternalNavigator
 import com.example.playlistmaker.sharing.domain.api.ResourceProvider
 import com.google.gson.Gson
 import org.koin.android.ext.koin.androidContext
@@ -64,6 +66,9 @@ val dataModule = module {
     
     single<ResourceProvider> {
         ResourceProviderImpl(context = androidContext())
+    }
+    single<ExternalNavigator> {
+        ExternalNavigatorImpl(context = androidContext())
     }
     
     factory<MediaPlayerInteractor> {
