@@ -13,19 +13,17 @@ import com.example.playlistmaker.search.domain.models.Track
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class MediaPlayerInteractorImpl(private val repository: SearchHistoryRepository, private val previewUrl: String?) :
+class MediaPlayerInteractorImpl(
+    private val mediaPlayer: MediaPlayer,
+    private val repository: SearchHistoryRepository
+) :
     MediaPlayerInteractor {
+    private lateinit var previewUrl: String
     private var listener: MediaPlayerInteractor.MediaPlayerListener? = null
-    private val mediaPlayer = MediaPlayer()
     private val handler = Handler(Looper.getMainLooper())
     private val playbackTimeRunnable = Runnable { startTimerUpdate() }
     private var currentTrack: Track? = null
     
-    
-    init {
-        
-        preparePlayer()
-    }
     
     override fun onPause() {
         pausePlayer()
@@ -47,6 +45,11 @@ class MediaPlayerInteractorImpl(private val repository: SearchHistoryRepository,
         this.listener = listener
     }
     
+    override fun setPreviewUrl(previewUrl: String) {
+        this.previewUrl = previewUrl
+        preparePlayer()
+    }
+    
     override fun removeListener() {
         listener = null
     }
@@ -59,7 +62,7 @@ class MediaPlayerInteractorImpl(private val repository: SearchHistoryRepository,
         listener?.onProgressUpdated(progress)
     }
     
-    override fun getTrackByPreviewUrl(){
+    override fun getTrackByPreviewUrl() {
         val track = repository.getTrackByPreviewUrl(previewUrl)
         currentTrack = track
         

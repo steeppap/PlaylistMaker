@@ -1,4 +1,4 @@
-package com.example.playlistmaker.sharing.data.impl
+package com.example.playlistmaker.sharing.domain.impl
 
 import com.example.playlistmaker.sharing.domain.api.ExternalNavigator
 import com.example.playlistmaker.sharing.domain.api.ResourceProvider

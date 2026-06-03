@@ -1,13 +1,10 @@
 package com.example.playlistmaker.search.data.network
 
 import com.example.playlistmaker.search.data.NetworkClient
-import com.example.playlistmaker.search.data.creator.SearchDataCreator
 import com.example.playlistmaker.search.data.dto.ITunesRequest
 import com.example.playlistmaker.search.data.dto.Response
 
-class RetrofitNetworkClient : NetworkClient {
-
-    val iTunesService = SearchDataCreator.createITunesService(I_TUNES_BASE_URL)
+class RetrofitNetworkClient(private val iTunesService: ITunesApiService) : NetworkClient {
 
     override fun doRequest(dto: Any): Response {
         if (dto is ITunesRequest) {
@@ -19,7 +16,6 @@ class RetrofitNetworkClient : NetworkClient {
         }
     }
     companion object {
-        private const val I_TUNES_BASE_URL = "https://itunes.apple.com"
         private const val BAD_REQUEST_CODE = 400
     }
 }
