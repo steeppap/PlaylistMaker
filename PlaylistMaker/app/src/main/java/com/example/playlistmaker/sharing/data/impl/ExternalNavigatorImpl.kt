@@ -15,7 +15,7 @@ class ExternalNavigatorImpl(private val context: Context) : ExternalNavigator {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, link)
         }
-        context.startActivity(Intent.createChooser(intent, null))
+        context.startActivity(Intent.createChooser(intent, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
     override fun openLink(link: String) {
@@ -23,7 +23,7 @@ class ExternalNavigatorImpl(private val context: Context) : ExternalNavigator {
         val intent = Intent(Intent.ACTION_VIEW).apply {
             data = link.toUri()
         }
-        context.startActivity(intent)
+        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
     override fun openEmail(email: String, title: String, mailBody: String, onError: (String) -> Unit) {
@@ -35,7 +35,7 @@ class ExternalNavigatorImpl(private val context: Context) : ExternalNavigator {
         }
 
         try {
-            context.startActivity(intent)
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: ActivityNotFoundException) {
             onError(getString(context, R.string.toast_no_email_app))
         }

@@ -55,4 +55,5 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation("io.insert-koin:koin-android:4.2.1")
 }

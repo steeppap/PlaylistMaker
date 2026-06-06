@@ -5,13 +5,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.ActivityPlayerBinding
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel
 import com.example.playlistmaker.search.ui.models.TrackUiModel
+import org.koin.androidx.viewmodel.ext.android.getViewModel
+import org.koin.core.parameter.parametersOf
 
 
 class PlayerActivity : AppCompatActivity() {
@@ -39,13 +40,11 @@ class PlayerActivity : AppCompatActivity() {
     }
     
     private fun initPlayerActivity() {
-        val trackPreviewUrl = intent.getStringExtra(EXTRA_TRACK_PREVIEW_URL)
-        
-        viewModel = ViewModelProvider(
-            this,
-            PlayerViewModel.getFactory(this, trackPreviewUrl)
-        )[PlayerViewModel::class.java]
-        
+        viewModel = getViewModel {
+            parametersOf(
+                intent.getStringExtra(EXTRA_TRACK_PREVIEW_URL)
+            )
+        }
         viewModel.observePlayerStateWithProgress().observe(this) {
             binding.timeBelowPlayBtn.text = it.progressTime
             changeButtonIcon(it.playerState == PlayerViewModel.STATE_PLAYING)

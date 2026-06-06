@@ -11,20 +11,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.lifecycle.ViewModelProvider
 import com.example.playlistmaker.R
-import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.databinding.ActivitySearchBinding
 import com.example.playlistmaker.search.ui.TrackAdapter
 import com.example.playlistmaker.search.ui.view_model.SearchViewModel
 import com.example.playlistmaker.search.ui.view_model.TrackSearchState
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SearchActivity : AppCompatActivity() {
     private lateinit var bindingSearch: ActivitySearchBinding
     private lateinit var textWatcher: TextWatcher
     private lateinit var trackListAdapter: TrackAdapter
     private lateinit var historyAdapter: TrackAdapter
-    private lateinit var viewModel: SearchViewModel
+    private val viewModel: SearchViewModel by viewModel()
     private val handler = Handler(Looper.getMainLooper())
     private var currentSearchRunnable: Runnable? = null
     
@@ -63,12 +62,6 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun initSearchActivity() {
-        
-        viewModel =
-            ViewModelProvider(
-                this,
-                SearchViewModel.getFactory(this)
-            )[SearchViewModel::class.java]
         
         trackListAdapter = TrackAdapter(emptyList()) { track ->
             viewModel.addTrackToHistory(track)
