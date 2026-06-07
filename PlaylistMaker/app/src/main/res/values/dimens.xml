@@ -28,5 +28,6 @@
     <dimen name="text_size_13">13sp</dimen>
     <dimen name="margin_30">30dp</dimen>
     <dimen name="ic_size_44">44dp</dimen>
-
+    <dimen name="margin_106">106dp</dimen>
+    <dimen name="margin_46">46dp</dimen>
 </resources>
