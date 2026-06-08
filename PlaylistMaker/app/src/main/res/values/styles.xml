@@ -176,4 +176,18 @@
         <item name="android:fontWeight">400</item>
     </style>
 
+    <style name="TabLayout" parent="OtherScreensBackground">
+        <item name="tabIndicatorColor">@color/black_button_text</item>
+        <item name="tabRippleColor">@color/grey</item>
+        <item name="tabTextColor">@color/black_button_text</item>
+        <item name="tabIndicatorHeight">2dp</item>
+    </style>
+
+    <style name="TabItem" parent="TextAppearance.Design.Tab">
+        <item name="textAllCaps">false</item>
+        <item name="fontFamily">@font/ys_display_medium</item>
+        <item name="fontWeight">500</item>
+        <item name="android:textSize">@dimen/text_size_14</item>
+    </style>
+
 </resources>
