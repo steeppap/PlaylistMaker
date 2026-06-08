@@ -25,6 +25,7 @@ class MediaLibraryActivity : AppCompatActivity() {
             insets
         }
         
+        initMediaLibrary()
         setListeners()
     }
     
@@ -33,12 +34,7 @@ class MediaLibraryActivity : AppCompatActivity() {
         tabMediator.detach()
     }
     
-    private fun setListeners(){
-        binding.backButton.setOnClickListener {
-            finish()
-        }
-        
-        
+    private fun initMediaLibrary(){
         binding.viewPager.adapter = MediaLibraryPagerAdapter(
             fragmentManager = supportFragmentManager,
             lifecycle = lifecycle
@@ -51,5 +47,11 @@ class MediaLibraryActivity : AppCompatActivity() {
             }
         }
         tabMediator.attach()
+    }
+    
+    private fun setListeners(){
+        binding.backButton.setOnClickListener {
+            finish()
+        }
     }
 }
