@@ -56,4 +56,9 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("io.insert-koin:koin-android:4.2.1")
+    
+    implementation("androidx.navigation:navigation-fragment-ktx:2.9.8")
+    implementation("androidx.navigation:navigation-ui-ktx:2.9.8")
+    implementation("androidx.fragment:fragment-ktx:1.8.9")
+    implementation("com.google.android.material:material:1.14.0")
 }

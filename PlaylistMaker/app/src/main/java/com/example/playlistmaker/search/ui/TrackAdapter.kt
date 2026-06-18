@@ -1,20 +1,21 @@
 package com.example.playlistmaker.search.ui
 
-import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.view.ViewGroup
+import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
-import com.example.playlistmaker.player.ui.activity.PlayerActivity
+import com.example.playlistmaker.R
+import com.example.playlistmaker.player.ui.fragment.PlayerFragment
 import com.example.playlistmaker.search.ui.models.TrackUiModel
 
 class TrackAdapter(
     private var trackList: List<TrackUiModel>,
+    private val navController: NavController,
     private val onItemClick: ((TrackUiModel) -> Unit)? = null
 ) : RecyclerView.Adapter<TrackViewHolder>() {
     private val handler = Handler(Looper.getMainLooper())
     private var isClickAllowed = true
-    
     
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder =
@@ -28,10 +29,10 @@ class TrackAdapter(
         
         holder.itemView.setOnClickListener {
             if (clickDebounce()) {
-                val intent = Intent(holder.itemView.context, PlayerActivity::class.java).apply {
-                    putExtra(EXTRA_TRACK_PREVIEW_URL, trackList[position].previewUrl)
-                }
-                holder.itemView.context.startActivity(intent)
+                navController.navigate(
+                    R.id.playerFragment,
+                    PlayerFragment.createArgs(trackList[position].previewUrl!!)
+                )
                 onItemClick?.invoke(trackList[position])
             }
         }
@@ -56,7 +57,6 @@ class TrackAdapter(
     }
     
     companion object {
-        private const val EXTRA_TRACK_PREVIEW_URL = "track_preview_url"
         private const val CLICK_DEBOUNCE_DELAY = 1000L
     }
 }

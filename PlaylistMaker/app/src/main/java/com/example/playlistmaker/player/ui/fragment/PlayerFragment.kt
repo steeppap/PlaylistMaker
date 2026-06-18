@@ -1,35 +1,37 @@
-package com.example.playlistmaker.player.ui.activity
+package com.example.playlistmaker.player.ui.fragment
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
-import com.example.playlistmaker.databinding.ActivityPlayerBinding
+import com.example.playlistmaker.databinding.FragmentPlayerBinding
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel
 import com.example.playlistmaker.search.ui.models.TrackUiModel
 import org.koin.androidx.viewmodel.ext.android.getViewModel
 import org.koin.core.parameter.parametersOf
 
-
-class PlayerActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityPlayerBinding
+class PlayerFragment : Fragment() {
+    private var _binding: FragmentPlayerBinding? = null
+    private val binding get() = _binding!!
     private lateinit var viewModel: PlayerViewModel
     
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityPlayerBinding.inflate(layoutInflater)
-        enableEdgeToEdge()
-        setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentPlayerBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+    
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         initPlayerActivity()
         setListeners()
     }
@@ -39,23 +41,27 @@ class PlayerActivity : AppCompatActivity() {
         viewModel.onPause()
     }
     
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+    
     private fun initPlayerActivity() {
-        viewModel = getViewModel {
-            parametersOf(
-                intent.getStringExtra(EXTRA_TRACK_PREVIEW_URL)
-            )
-        }
-        viewModel.observePlayerStateWithProgress().observe(this) {
+        val trackPreviewUrl = requireArguments().getString(ARGS_TRACK_PREVIEW_URL) ?: ""
+        
+        viewModel = getViewModel { parametersOf(trackPreviewUrl) }
+        
+        viewModel.observePlayerStateWithProgress().observe(viewLifecycleOwner) {
             binding.timeBelowPlayBtn.text = it.progressTime
             changeButtonIcon(it.playerState == PlayerViewModel.STATE_PLAYING)
         }
-        viewModel.observeTrackUiModel().observe(this) {
+        viewModel.observeTrackUiModel().observe(viewLifecycleOwner) {
             showTrackInfo(it)
         }
     }
     
     private fun setListeners() {
-        binding.backButton.setOnClickListener { finish() }
+        binding.backButton.setOnClickListener { findNavController().navigateUp() }
         
         binding.playStopBtn.setOnClickListener {
             viewModel.playbackControl()
@@ -97,6 +103,9 @@ class PlayerActivity : AppCompatActivity() {
     }
     
     companion object {
-        private const val EXTRA_TRACK_PREVIEW_URL = "track_preview_url"
+        private const val ARGS_TRACK_PREVIEW_URL = "track_preview_url"
+        
+        fun createArgs(trackPreviewUrl: String): Bundle =
+            bundleOf(ARGS_TRACK_PREVIEW_URL to trackPreviewUrl)
     }
 }
