@@ -29,11 +29,13 @@ class TrackAdapter(
         
         holder.itemView.setOnClickListener {
             if (clickDebounce()) {
-                navController.navigate(
-                    R.id.playerFragment,
-                    PlayerFragment.createArgs(trackList[position].previewUrl!!)
-                )
-                onItemClick?.invoke(trackList[position])
+                trackList[position].previewUrl?.let { url ->
+                    navController.navigate(
+                        R.id.playerFragment,
+                        PlayerFragment.createArgs(url)
+                    )
+                    onItemClick?.invoke(trackList[position])
+                }
             }
         }
     }
