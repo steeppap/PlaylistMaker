@@ -2,10 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/searchFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".search.ui.activity.SearchActivity">
+    tools:context=".search.ui.fragment.SearchFragment">
 
     <LinearLayout
         style="@style/OtherScreensBackground"
@@ -28,29 +28,6 @@
                 android:layout_marginStart="@dimen/header_margin_vertical_and_start"
                 android:layout_marginEnd="@dimen/header_margin_end"
                 android:orientation="horizontal">
-
-                <FrameLayout
-
-                    android:layout_width="@dimen/back_butt_layout_width"
-                    android:layout_height="match_parent">
-
-                    <ImageView
-
-                        style="@style/HeaderPanelElementsColor"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_arrow_back_24" />
-
-                    <Button
-
-                        android:id="@+id/back_button"
-                        style="?android:attr/borderlessButtonStyle"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:foreground="?attr/selectableItemBackground" />
-
-                </FrameLayout>
 
                 <FrameLayout
 
@@ -124,6 +101,7 @@
 
                 <Button
                     style="@style/UpdateButtonStyle"
+                    android:layout_marginBottom="@dimen/panel_header_height"
                     android:id="@+id/clear_history_btn"
                     android:text="@string/clear_history" />
 

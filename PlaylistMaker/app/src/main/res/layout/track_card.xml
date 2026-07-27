@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    tools:context=".search.ui.activity.SearchActivity">
+    tools:context=".search.ui.fragment.SearchFragment">
 
     <ImageView
         android:id="@+id/track_cover"

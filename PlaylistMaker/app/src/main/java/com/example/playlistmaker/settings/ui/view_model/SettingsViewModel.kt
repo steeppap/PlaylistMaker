@@ -11,19 +11,12 @@ class SettingsViewModel(
     private val themeInteractor: ThemeInteractor,
 ) : ViewModel() {
     
-    private val darkModeStateLiveData = MutableLiveData<Boolean>()
-    fun observeDarkModeState(): LiveData<Boolean> = darkModeStateLiveData
     private val toastStateLiveData = MutableLiveData<ToastState>()
     fun observeToastState(): LiveData<ToastState> = toastStateLiveData
-    
-    init {
-        darkModeStateLiveData.postValue(themeInteractor.isDarkModeEnabled())
-    }
     
     fun setNecessaryTheme() {
         val currentState = themeInteractor.isDarkModeEnabled()
         themeInteractor.setDarkModeEnabled(!currentState)
-        darkModeStateLiveData.postValue(!currentState)
     }
     
     fun shareApp() {

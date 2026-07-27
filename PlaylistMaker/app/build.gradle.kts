@@ -49,11 +49,16 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation ("com.github.bumptech.glide:glide:5.0.7")
-    annotationProcessor ("com.github.bumptech.glide:compiler:5.0.7")
-    implementation("com.google.code.gson:gson:2.14.0")
-    implementation("com.squareup.retrofit2:retrofit:3.0.0")
-    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    implementation("io.insert-koin:koin-android:4.2.1")
+    
+    implementation (libs.glide)
+    annotationProcessor (libs.glide.compiler)
+    implementation(libs.gson)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.koin.android)
+    
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.material.v1140)
 }

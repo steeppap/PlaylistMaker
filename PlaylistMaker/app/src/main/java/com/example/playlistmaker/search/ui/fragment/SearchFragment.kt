@@ -1,25 +1,27 @@
-package com.example.playlistmaker.search.ui.activity
+package com.example.playlistmaker.search.ui.fragment
 
+import android.content.Context.INPUT_METHOD_SERVICE
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import com.example.playlistmaker.R
-import com.example.playlistmaker.databinding.ActivitySearchBinding
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.example.playlistmaker.databinding.FragmentSearchBinding
 import com.example.playlistmaker.search.ui.TrackAdapter
 import com.example.playlistmaker.search.ui.view_model.SearchViewModel
 import com.example.playlistmaker.search.ui.view_model.TrackSearchState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class SearchActivity : AppCompatActivity() {
-    private lateinit var bindingSearch: ActivitySearchBinding
+class SearchFragment: Fragment() {
+    private var _binding: FragmentSearchBinding? = null
+    private val binding get() = _binding!!
     private lateinit var textWatcher: TextWatcher
     private lateinit var trackListAdapter: TrackAdapter
     private lateinit var historyAdapter: TrackAdapter
@@ -27,72 +29,63 @@ class SearchActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var currentSearchRunnable: Runnable? = null
     
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSearchBinding.inflate(inflater, container, false)
+        return binding.root
+    }
     
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        bindingSearch = ActivitySearchBinding.inflate(layoutInflater)
-        
-        enableEdgeToEdge()
-        setContentView(bindingSearch.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-        if (savedInstanceState != null) {
-            onRestoreInstanceState(savedInstanceState)
-        }
-        
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         initSearchActivity()
         setListeners()
     }
     
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-    }
-    
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-    }
-    
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        binding.searchEditText.removeTextChangedListener(textWatcher)
+        trackListAdapter.updateTrackList(emptyList())
+        historyAdapter.updateTrackList(emptyList())
         currentSearchRunnable?.let { handler.removeCallbacks(it) }
-        bindingSearch.searchEditText.removeTextChangedListener(textWatcher)
+        
+        super.onDestroyView()
+        _binding = null
     }
     
     private fun initSearchActivity() {
         
-        trackListAdapter = TrackAdapter(emptyList()) { track ->
+        trackListAdapter = TrackAdapter(emptyList(), findNavController()) { track ->
             viewModel.addTrackToHistory(track)
         }
         
         historyAdapter =
-            TrackAdapter(emptyList()) { track ->
+            TrackAdapter(emptyList(), findNavController()) { track ->
                 viewModel.addTrackToHistoryFromHistoryAdapter(track)
             }
         
-        bindingSearch.apply {
+        binding.apply {
             recyclerViewHistory.adapter = historyAdapter
             recyclerViewTrackList.adapter = trackListAdapter
         }
         
-        viewModel.observeSearchState().observe(this) {
+        viewModel.observeSearchState().observe(viewLifecycleOwner) {
             renderUiState(it)
         }
         
-        viewModel.observeTrackList().observe(this) { trackList ->
+        viewModel.observeTrackList().observe(viewLifecycleOwner) { trackList ->
             trackListAdapter.updateTrackList(trackList)
         }
         
-        viewModel.observeClearButtonVisible().observe(this) { visibility ->
-            bindingSearch.clearBtn.isVisible = visibility
+        viewModel.observeClearButtonVisible().observe(viewLifecycleOwner) { visibility ->
+            binding.clearBtn.isVisible = visibility
         }
         
-        viewModel.observeSearchQuery().observe(this) { currentText ->
-            val currentEditTextText = bindingSearch.searchEditText.text.toString()
+        viewModel.observeSearchQuery().observe(viewLifecycleOwner) { currentText ->
+            val currentEditTextText = binding.searchEditText.text.toString()
             if (currentEditTextText != currentText) {
-                bindingSearch.searchEditText.setText(currentText)
+                binding.searchEditText.setText(currentText)
             }
             
             if (currentText.isEmpty()) {
@@ -102,7 +95,7 @@ class SearchActivity : AppCompatActivity() {
             }
         }
         
-        viewModel.observeHistory().observe(this) { trackListHistory ->
+        viewModel.observeHistory().observe(viewLifecycleOwner) { trackListHistory ->
             historyAdapter.updateTrackList(trackListHistory)
         }
         
@@ -112,7 +105,7 @@ class SearchActivity : AppCompatActivity() {
             }
             
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val newText = s.toString().trim()
+                val newText = s.toString()
                 viewModel.updateSearchQuery(newText)
                 
             }
@@ -124,13 +117,10 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun setListeners() {
-        bindingSearch.apply {
-            backButton.setOnClickListener {
-                finish()
-            }
+        binding.apply {
             
             clearBtn.setOnClickListener {
-                bindingSearch.apply {
+                binding.apply {
                     searchEditText.setText("")
                     searchEditText.clearFocus()
                 }
@@ -166,8 +156,8 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun hideKeyboard() {
-        (getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)?.apply {
-            hideSoftInputFromWindow(bindingSearch.searchEditText.windowToken, 0)
+        (requireContext().getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)?.apply {
+            hideSoftInputFromWindow(binding.searchEditText.windowToken, 0)
         }
     }
     
@@ -183,7 +173,7 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun showDefaultUiState() {
-        bindingSearch.apply {
+        binding.apply {
             progressBar.isVisible = false
             recyclerViewTrackList.isVisible = false
             historyView.isVisible = false
@@ -193,7 +183,7 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun showLoading() {
-        bindingSearch.apply {
+        binding.apply {
             progressBar.isVisible = true
             recyclerViewTrackList.isVisible = false
             historyView.isVisible = false
@@ -203,7 +193,7 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun showTracks() {
-        bindingSearch.apply {
+        binding.apply {
             recyclerViewTrackList.isVisible = true
             progressBar.isVisible = false
             historyView.isVisible = false
@@ -213,7 +203,7 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun showConnectionError() {
-        bindingSearch.apply {
+        binding.apply {
             connectionError.connectionError.isVisible = true
             nothingFound.nothingFound.isVisible = false
             progressBar.isVisible = false
@@ -223,7 +213,7 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun showNothingFoundError() {
-        bindingSearch.apply {
+        binding.apply {
             nothingFound.nothingFound.isVisible = true
             connectionError.connectionError.isVisible = false
             progressBar.isVisible = false
@@ -233,7 +223,7 @@ class SearchActivity : AppCompatActivity() {
     }
     
     private fun showHistory() {
-        bindingSearch.apply {
+        binding.apply {
             historyView.isVisible = true
             recyclerViewTrackList.isVisible = false
             connectionError.connectionError.isVisible = false
