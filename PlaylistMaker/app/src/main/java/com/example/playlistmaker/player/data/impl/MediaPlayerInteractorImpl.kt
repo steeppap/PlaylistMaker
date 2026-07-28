@@ -1,8 +1,6 @@
 package com.example.playlistmaker.player.data.impl
 
 import android.media.MediaPlayer
-import android.os.Handler
-import android.os.Looper
 import com.example.playlistmaker.player.domain.api.MediaPlayerInteractor
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.DEFAULT_TIME
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PAUSED
@@ -10,8 +8,16 @@ import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PREPARED
 import com.example.playlistmaker.search.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.search.domain.models.Track
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 class MediaPlayerInteractorImpl(
     private val mediaPlayer: MediaPlayer,
@@ -20,9 +26,8 @@ class MediaPlayerInteractorImpl(
     MediaPlayerInteractor {
     private lateinit var previewUrl: String
     private var listener: MediaPlayerInteractor.MediaPlayerListener? = null
-    private val handler = Handler(Looper.getMainLooper())
-    private val playbackTimeRunnable = Runnable { startTimerUpdate() }
     private var currentTrack: Track? = null
+    private var timerJob: Job? = null
     
     
     override fun onPause() {
@@ -52,6 +57,7 @@ class MediaPlayerInteractorImpl(
     
     override fun removeListener() {
         listener = null
+        cancelTimer()
     }
     
     override fun updatePlayerState(newState: Int) {
@@ -71,7 +77,7 @@ class MediaPlayerInteractorImpl(
     
     override fun release() {
         mediaPlayer.release()
-        resetTimer()
+        cancelTimer()
     }
     
     private fun preparePlayer() {
@@ -83,7 +89,7 @@ class MediaPlayerInteractorImpl(
         }
         mediaPlayer.setOnCompletionListener {
             updatePlayerState(STATE_PREPARED)
-            resetTimer()
+            cancelTimer()
         }
     }
     
@@ -99,25 +105,31 @@ class MediaPlayerInteractorImpl(
         updatePlayerState(STATE_PAUSED)
     }
     
-    private fun resetTimer() {
+    private fun cancelTimer() {
+        timerJob?.cancel()
+        timerJob = null
         updateProgress(DEFAULT_TIME)
-        handler.removeCallbacks(playbackTimeRunnable)
     }
     
     private fun startTimerUpdate() {
-        updateProgress(
-            SimpleDateFormat("mm:ss", Locale.getDefault()).format(
-                mediaPlayer.currentPosition
-            )
-        )
-        handler.postDelayed(playbackTimeRunnable, DELAY)
+        timerJob = CoroutineScope(SupervisorJob()).launch(Dispatchers.IO) {
+            while (mediaPlayer.isPlaying) {
+                delay(DELAY.milliseconds)
+                val progress = SimpleDateFormat("mm:ss", Locale.getDefault()).format(
+                    mediaPlayer.currentPosition
+                )
+                withContext(Dispatchers.Main) {
+                    updateProgress(progress)
+                }
+            }
+        }
     }
     
     private fun pauseTimer() {
-        handler.removeCallbacks(playbackTimeRunnable)
+        timerJob?.cancel()
     }
     
     companion object {
-        const val DELAY = 500L
+        const val DELAY = 300L
     }
 }

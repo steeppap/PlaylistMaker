@@ -1,7 +1,8 @@
 package com.example.playlistmaker.search.domain.api
 
 import com.example.playlistmaker.search.domain.models.Track
+import kotlinx.coroutines.flow.Flow
 
 interface TracksRepository {
-    fun search(expression: String): Pair<List<Track>, Int>
+    fun search(expression: String): Flow<Pair<List<Track>, Int>>
 }

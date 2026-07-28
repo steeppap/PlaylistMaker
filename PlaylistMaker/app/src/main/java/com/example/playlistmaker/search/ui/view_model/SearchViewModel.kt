@@ -3,12 +3,14 @@ package com.example.playlistmaker.search.ui.view_model
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.playlistmaker.search.domain.api.SearchHistoryInteractor
 import com.example.playlistmaker.search.domain.api.TracksSearchInteractor
 import com.example.playlistmaker.search.domain.models.Track
 import com.example.playlistmaker.search.ui.extension.TrackListUiMapper
 import com.example.playlistmaker.search.ui.extension.TrackUiMapper
 import com.example.playlistmaker.search.ui.models.TrackUiModel
+import kotlinx.coroutines.launch
 
 class SearchViewModel(
     val searchHistoryInteractor: SearchHistoryInteractor,
@@ -26,6 +28,9 @@ class SearchViewModel(
     private val clearButtonVisibleLiveData = MutableLiveData(false)
     fun observeClearButtonVisible(): LiveData<Boolean> = clearButtonVisibleLiveData
     
+    init {
+        searchStateLiveData.postValue(TrackSearchState.History)
+    }
     fun addTrackToHistory(trackUi: TrackUiModel) {
         searchHistoryInteractor.addTrackToHistory(TrackUiMapper.trackUiModelToTrack(trackUi))
         val updatedHistory = getTracksHistory()
@@ -42,7 +47,9 @@ class SearchViewModel(
     }
     
     fun onSearchFocused() {
-        if (historyLiveData.value!!.isEmpty()) searchStateLiveData.postValue(TrackSearchState.Default) else
+        if (historyLiveData.value!!.isEmpty())
+            searchStateLiveData.postValue(TrackSearchState.Default)
+        else if (searchQueryLiveData.value!!.isEmpty() && historyLiveData.value!!.isNotEmpty())
             searchStateLiveData.postValue(TrackSearchState.History)
     }
     
@@ -55,36 +62,43 @@ class SearchViewModel(
     fun updateSearchQuery(newQuery: String) {
         searchQueryLiveData.postValue(newQuery)
         
-        if (newQuery.isEmpty() && historyLiveData.value!!.isNotEmpty()) searchStateLiveData.postValue(
-            TrackSearchState.History
-        ) else searchStateLiveData.postValue(TrackSearchState.Default)
+        if (newQuery.isEmpty() && historyLiveData.value!!.isNotEmpty())
+            searchStateLiveData.postValue(TrackSearchState.History)
+        else
+            searchStateLiveData.postValue(TrackSearchState.Default)
         
-        if (newQuery.isEmpty()) clearButtonVisibleLiveData.postValue(false) else clearButtonVisibleLiveData.postValue(
-            true
-        )
+        if (newQuery.isEmpty())
+            clearButtonVisibleLiveData.postValue(false)
+        else
+            clearButtonVisibleLiveData.postValue(true)
     }
     
     fun search(query: String) {
         searchStateLiveData.postValue(TrackSearchState.Loading)
         
-        tracksSearchInteractor.search(query, object : TracksSearchInteractor.TracksConsumer {
-            override fun consume(foundTracks: Pair<List<Track>, Int>) {
-                val trackList = TrackListUiMapper.trackListToTrackListUi(foundTracks.first)
-                val resultCode = foundTracks.second
-                
-                if (trackList.isEmpty() && resultCode == COMPLETE_CODE) {
-                    trackListLiveData.postValue(emptyList())
-                    searchStateLiveData.postValue(TrackSearchState.Empty)
-                    
-                } else if (trackList.isNotEmpty() && resultCode == COMPLETE_CODE) {
-                    trackListLiveData.postValue(trackList)
-                    searchStateLiveData.postValue(TrackSearchState.Success)
-                    
-                } else {
-                    searchStateLiveData.postValue(TrackSearchState.Error)
+        viewModelScope.launch {
+            tracksSearchInteractor
+                .search(query)
+                .collect { pair ->
+                    responseProcessing(pair.first, pair.second)
                 }
-            }
-        })
+        }
+    }
+    
+    private fun responseProcessing(foundTracks: List<Track>, resultCode: Int) {
+        val trackListUi = TrackListUiMapper.trackListToTrackListUi(foundTracks)
+        
+        if (trackListUi.isEmpty() && resultCode == COMPLETE_CODE) {
+            trackListLiveData.postValue(emptyList())
+            searchStateLiveData.postValue(TrackSearchState.Empty)
+            
+        } else if (trackListUi.isNotEmpty() && resultCode == COMPLETE_CODE) {
+            trackListLiveData.postValue(trackListUi)
+            searchStateLiveData.postValue(TrackSearchState.Success)
+            
+        } else {
+            searchStateLiveData.postValue(TrackSearchState.Error)
+        }
     }
     
     companion object {
