@@ -29,7 +29,9 @@ class SearchViewModel(
     fun observeClearButtonVisible(): LiveData<Boolean> = clearButtonVisibleLiveData
     
     init {
-        searchStateLiveData.postValue(TrackSearchState.History)
+        if (trackListHistory.isNotEmpty()) {
+            searchStateLiveData.postValue(TrackSearchState.History)
+        }
     }
     fun addTrackToHistory(trackUi: TrackUiModel) {
         searchHistoryInteractor.addTrackToHistory(TrackUiMapper.trackUiModelToTrack(trackUi))
