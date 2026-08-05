@@ -2,8 +2,6 @@ package com.example.playlistmaker.search.ui.fragment
 
 import android.content.Context.INPUT_METHOD_SERVICE
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -12,22 +10,27 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.playlistmaker.databinding.FragmentSearchBinding
 import com.example.playlistmaker.search.ui.TrackAdapter
 import com.example.playlistmaker.search.ui.view_model.SearchViewModel
 import com.example.playlistmaker.search.ui.view_model.TrackSearchState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import kotlin.time.Duration.Companion.milliseconds
 
-class SearchFragment: Fragment() {
+class SearchFragment : Fragment() {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
     private lateinit var textWatcher: TextWatcher
     private lateinit var trackListAdapter: TrackAdapter
     private lateinit var historyAdapter: TrackAdapter
     private val viewModel: SearchViewModel by viewModel()
-    private val handler = Handler(Looper.getMainLooper())
-    private var currentSearchRunnable: Runnable? = null
+    private var searchJob: Job? = null
+    private var isClickAllowed = true
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,7 +51,6 @@ class SearchFragment: Fragment() {
         binding.searchEditText.removeTextChangedListener(textWatcher)
         trackListAdapter.updateTrackList(emptyList())
         historyAdapter.updateTrackList(emptyList())
-        currentSearchRunnable?.let { handler.removeCallbacks(it) }
         
         super.onDestroyView()
         _binding = null
@@ -57,12 +59,16 @@ class SearchFragment: Fragment() {
     private fun initSearchActivity() {
         
         trackListAdapter = TrackAdapter(emptyList(), findNavController()) { track ->
-            viewModel.addTrackToHistory(track)
+            if (clickDebounce()) {
+                viewModel.addTrackToHistory(track)
+            }
         }
         
         historyAdapter =
             TrackAdapter(emptyList(), findNavController()) { track ->
-                viewModel.addTrackToHistoryFromHistoryAdapter(track)
+                if (clickDebounce()) {
+                    viewModel.addTrackToHistoryFromHistoryAdapter(track)
+                }
             }
         
         binding.apply {
@@ -89,9 +95,10 @@ class SearchFragment: Fragment() {
             }
             
             if (currentText.isEmpty()) {
-                currentSearchRunnable?.let { handler.removeCallbacks(it) }
+                searchJob?.cancel()
+                searchJob = null
             } else {
-                searchDebounce(currentText, SEARCH_DEBOUNCE_DELAY)
+                searchDebounce(currentText)
             }
         }
         
@@ -144,21 +151,30 @@ class SearchFragment: Fragment() {
         }
     }
     
-    private fun searchDebounce(query: String, debounceDelay: Long) {
-        currentSearchRunnable?.let {
-            handler.removeCallbacks(it)
-        }
-        
-        currentSearchRunnable = Runnable {
+    private fun searchDebounce(query: String) {
+        searchJob?.cancel()
+        searchJob = lifecycleScope.launch {
+            delay(SEARCH_DEBOUNCE_DELAY.milliseconds)
             viewModel.search(query)
         }
-        handler.postDelayed(currentSearchRunnable!!, debounceDelay)
     }
     
     private fun hideKeyboard() {
         (requireContext().getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager)?.apply {
             hideSoftInputFromWindow(binding.searchEditText.windowToken, 0)
         }
+    }
+    
+    private fun clickDebounce(): Boolean {
+        val current = isClickAllowed
+        if (isClickAllowed) {
+            isClickAllowed = false
+            lifecycleScope.launch {
+                delay(CLICK_DEBOUNCE_DELAY.milliseconds)
+                isClickAllowed = true
+            }
+        }
+        return current
     }
     
     private fun renderUiState(state: TrackSearchState) {
@@ -232,6 +248,7 @@ class SearchFragment: Fragment() {
     }
     
     companion object {
+        private const val CLICK_DEBOUNCE_DELAY = 1000L
         private const val SEARCH_DEBOUNCE_DELAY = 1500L
     }
 }

@@ -6,11 +6,13 @@ import com.example.playlistmaker.search.data.dto.ITunesResponse
 import com.example.playlistmaker.search.data.extension.TrackDtoMapper
 import com.example.playlistmaker.search.domain.api.TracksRepository
 import com.example.playlistmaker.search.domain.models.Track
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class TracksRepositoryImpl(private val networkClient: NetworkClient) : TracksRepository {
-
-    override fun search(expression: String): Pair<List<Track>, Int> {
-        return try {
+    
+    override fun search(expression: String): Flow<Pair<List<Track>, Int>> = flow {
+        try {
             val response = networkClient.doRequest(ITunesRequest(expression))
             val tracks = if (response.resultCode == COMPLETE_CODE) {
                 (response as ITunesResponse).results.map { track ->
@@ -19,13 +21,13 @@ class TracksRepositoryImpl(private val networkClient: NetworkClient) : TracksRep
             } else {
                 emptyList()
             }
-
-            Pair(tracks, response.resultCode)
+            
+            emit(Pair(tracks, response.resultCode))
         } catch (e: Exception) {
-            Pair(emptyList(), FAIL_CODE)
+            emit(Pair(emptyList(), FAIL_CODE))
         }
     }
-
+    
     companion object {
         private const val COMPLETE_CODE = 200
         private const val FAIL_CODE = -1
