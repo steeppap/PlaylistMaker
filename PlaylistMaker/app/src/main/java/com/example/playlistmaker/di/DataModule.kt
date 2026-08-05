@@ -3,7 +3,12 @@ package com.example.playlistmaker.di
 import android.content.Context
 import android.content.SharedPreferences
 import android.media.MediaPlayer
+import androidx.room.Room
+import com.example.playlistmaker.player.data.db.AppDatabase
+import com.example.playlistmaker.player.data.db.MIGRATION_1_2
+import com.example.playlistmaker.player.data.impl.FavoriteTracksRepositoryImpl
 import com.example.playlistmaker.player.data.impl.MediaPlayerInteractorImpl
+import com.example.playlistmaker.player.domain.db.FavoriteTracksRepository
 import com.example.playlistmaker.player.domain.api.MediaPlayerInteractor
 import com.example.playlistmaker.search.data.NetworkClient
 import com.example.playlistmaker.search.data.impl.SearchHistoryRepositoryImpl
@@ -52,12 +57,13 @@ val dataModule = module {
     single<SearchHistoryRepository> {
         SearchHistoryRepositoryImpl(
             sharedPrefs = get<SharedPreferences>(),
-            gson = get<Gson>()
+            gson = get<Gson>(),
+            appDatabase = get()
         )
     }
     
     single<TracksRepository> {
-        TracksRepositoryImpl(networkClient = get())
+        TracksRepositoryImpl(networkClient = get(), appDatabase = get())
     }
     
     single<ThemeRepository> {
@@ -72,7 +78,17 @@ val dataModule = module {
     }
     
     factory<MediaPlayerInteractor> {
-        MediaPlayerInteractorImpl(get<MediaPlayer>(), get<SearchHistoryRepository>())
+        MediaPlayerInteractorImpl(get<MediaPlayer>())
+    }
+    
+    single {
+        Room.databaseBuilder(androidContext(), AppDatabase::class.java, "database.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
+    }
+    
+    single<FavoriteTracksRepository> {
+        FavoriteTracksRepositoryImpl(get())
     }
     
 }

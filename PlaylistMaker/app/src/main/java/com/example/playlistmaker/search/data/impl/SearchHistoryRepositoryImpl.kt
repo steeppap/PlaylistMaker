@@ -2,6 +2,7 @@ package com.example.playlistmaker.search.data.impl
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.example.playlistmaker.player.data.db.AppDatabase
 import com.example.playlistmaker.search.data.dto.SearchHistoryItem
 import com.example.playlistmaker.search.data.extension.TrackListDtoMapper
 import com.example.playlistmaker.search.data.extension.TrackDtoMapper
@@ -12,10 +13,11 @@ import com.google.gson.reflect.TypeToken
 
 class SearchHistoryRepositoryImpl(
     private val sharedPrefs: SharedPreferences,
-    private val gson: Gson
+    private val gson: Gson,
+    private val appDatabase: AppDatabase
 ) : SearchHistoryRepository {
     
-    override fun addTrackToHistory(track: Track) {
+    override suspend fun addTrackToHistory(track: Track) {
         val historyItem = TrackDtoMapper.trackToSearchHistoryItem(track)
         val history: MutableList<SearchHistoryItem> =
             TrackListDtoMapper.trackListToSearchItemList(getTracksHistory()).toMutableList()
@@ -31,19 +33,24 @@ class SearchHistoryRepositoryImpl(
         }
     }
     
-    override fun getTracksHistory(): List<Track> {
+    override suspend fun getTracksHistory(): List<Track> {
         val json = sharedPrefs.getString(KEY_HISTORY, null)
         val type = object : TypeToken<List<SearchHistoryItem>>() {}.type
         val searchItemList: List<SearchHistoryItem> = gson.fromJson(json, type) ?: listOf()
+        val trackList = TrackListDtoMapper.searchItemListToTrackList(searchItemList)
         
-        return TrackListDtoMapper.searchItemListToTrackList(searchItemList)
+        val favoriteTracksId = appDatabase.trackDao().getFavoriteTracksId()
+        return trackList.map{track ->
+            val isFavorite = track.trackId in favoriteTracksId
+            track.copy(isFavorite = isFavorite)
+        }
     }
     
     override fun clearTracksHistory() {
         sharedPrefs.edit { remove(KEY_HISTORY) }
     }
     
-    override fun getTrackByPreviewUrl(trackPreviewUrl: String?): Track? {
+    override suspend fun getTrackByPreviewUrl(trackPreviewUrl: String?): Track? {
         val tracks = getTracksHistory()
         return tracks.find { it.previewUrl == trackPreviewUrl }
     }

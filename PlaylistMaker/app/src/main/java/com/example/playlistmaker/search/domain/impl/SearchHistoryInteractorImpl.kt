@@ -7,16 +7,20 @@ import com.example.playlistmaker.search.domain.api.SearchHistoryRepository
 class SearchHistoryInteractorImpl(private val repository: SearchHistoryRepository) :
     SearchHistoryInteractor {
     
-    override fun addTrackToHistory(track: Track) {
+    override suspend fun addTrackToHistory(track: Track) {
         repository.addTrackToHistory(track)
     }
     
-    override fun getTracksHistory(): List<Track> {
+    override suspend fun getTracksHistory(): List<Track> {
         return repository.getTracksHistory()
     }
     
     override fun clearTracksHistory() {
         repository.clearTracksHistory()
+    }
+    
+    override suspend fun getTrackByPreviewUrl(trackPreviewUrl: String?): Track? {
+        return repository.getTrackByPreviewUrl(trackPreviewUrl)
     }
     
 }

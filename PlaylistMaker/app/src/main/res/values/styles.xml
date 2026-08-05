@@ -161,7 +161,6 @@
         <item name="android:layout_width">@dimen/ic_size_51</item>
         <item name="android:layout_height">@dimen/ic_size_51</item>
         <item name="android:layout_marginTop">@dimen/ic_size_24</item>
-        <item name="android:backgroundTint">@color/white</item>
     </style>
 
     <style name="TrackDescription">

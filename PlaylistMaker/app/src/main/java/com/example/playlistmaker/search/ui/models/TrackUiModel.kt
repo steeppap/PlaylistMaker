@@ -13,7 +13,8 @@ data class TrackUiModel(
     val releaseDate: String?,
     val primaryGenreName: String?,
     val country: String?,
-    val previewUrl: String?
+    val previewUrl: String?,
+    var isFavorite: Boolean
 ) : Parcelable {
     
     constructor(parcel: Parcel) : this(
@@ -26,7 +27,8 @@ data class TrackUiModel(
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
-        parcel.readString()
+        parcel.readString(),
+        parcel.readBoolean()
     )
     
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -40,6 +42,7 @@ data class TrackUiModel(
         parcel.writeString(primaryGenreName)
         parcel.writeString(country)
         parcel.writeString(previewUrl)
+        parcel.writeBoolean(isFavorite)
     }
     
     override fun describeContents(): Int {

@@ -5,15 +5,11 @@ import com.example.playlistmaker.player.domain.api.MediaPlayerInteractor
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PAUSED
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PLAYING
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel.Companion.STATE_PREPARED
-import com.example.playlistmaker.search.domain.api.SearchHistoryRepository
-import com.example.playlistmaker.search.domain.models.Track
 
 class MediaPlayerInteractorImpl(
-    private val mediaPlayer: MediaPlayer,
-    private val repository: SearchHistoryRepository
+    private val mediaPlayer: MediaPlayer
 ) :
     MediaPlayerInteractor {
-    private lateinit var previewUrl: String
     private var listener: MediaPlayerInteractor.MediaPlayerListener? = null
     
     
@@ -37,9 +33,8 @@ class MediaPlayerInteractorImpl(
         this.listener = listener
     }
     
-    override fun setPreviewUrl(previewUrl: String) {
-        this.previewUrl = previewUrl
-        preparePlayer()
+    override fun setPreviewUrl(previewUrl: String?) {
+        preparePlayer(previewUrl)
     }
     
     override fun removeListener() {
@@ -50,12 +45,6 @@ class MediaPlayerInteractorImpl(
         listener?.onStateChanged(newState)
     }
     
-    override fun getTrackByPreviewUrl() {
-        val track = repository.getTrackByPreviewUrl(previewUrl)
-        
-        track?.let { listener?.onTrackLoaded(it) }
-    }
-    
     override fun release() {
         mediaPlayer.release()
     }
@@ -64,7 +53,7 @@ class MediaPlayerInteractorImpl(
         return mediaPlayer.currentPosition
     }
     
-    private fun preparePlayer() {
+    private fun preparePlayer(previewUrl: String?) {
         mediaPlayer.setDataSource(previewUrl)
         mediaPlayer.prepareAsync()
         

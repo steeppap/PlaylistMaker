@@ -16,12 +16,11 @@ class SearchViewModel(
     val searchHistoryInteractor: SearchHistoryInteractor,
     val tracksSearchInteractor: TracksSearchInteractor
 ) : ViewModel() {
-    private val trackListHistory: List<TrackUiModel> = getTracksHistory()
     private val searchStateLiveData = MutableLiveData<TrackSearchState>(TrackSearchState.Default)
     fun observeSearchState(): LiveData<TrackSearchState> = searchStateLiveData
     private val trackListLiveData = MutableLiveData(emptyList<TrackUiModel>())
     fun observeTrackList(): LiveData<List<TrackUiModel>> = trackListLiveData
-    private val historyLiveData = MutableLiveData(trackListHistory)
+    private val historyLiveData = MutableLiveData<List<TrackUiModel>>()
     fun observeHistory(): LiveData<List<TrackUiModel>> = historyLiveData
     private val searchQueryLiveData = MutableLiveData("")
     fun observeSearchQuery(): LiveData<String> = searchQueryLiveData
@@ -29,23 +28,29 @@ class SearchViewModel(
     fun observeClearButtonVisible(): LiveData<Boolean> = clearButtonVisibleLiveData
     
     init {
-        if (trackListHistory.isNotEmpty()) {
-            searchStateLiveData.postValue(TrackSearchState.History)
+        viewModelScope.launch{
+            val history = getTracksHistory()
+            historyLiveData.value = history
+            
+            if (history.isNotEmpty()) {
+                searchStateLiveData.postValue(TrackSearchState.History)
+            }
         }
     }
-    fun addTrackToHistory(trackUi: TrackUiModel) {
+    suspend fun addTrackToHistory(trackUi: TrackUiModel) {
         searchHistoryInteractor.addTrackToHistory(TrackUiMapper.trackUiModelToTrack(trackUi))
         val updatedHistory = getTracksHistory()
         historyLiveData.postValue(updatedHistory)
     }
     
-    fun addTrackToHistoryFromHistoryAdapter(trackUi: TrackUiModel) {
+    suspend fun addTrackToHistoryFromHistoryAdapter(trackUi: TrackUiModel) {
         addTrackToHistory(trackUi)
         searchStateLiveData.postValue(TrackSearchState.History)
     }
     
-    fun getTracksHistory(): List<TrackUiModel> {
-        return TrackListUiMapper.trackListToTrackListUi(searchHistoryInteractor.getTracksHistory())
+    suspend fun getTracksHistory(): List<TrackUiModel> {
+        val tracks = searchHistoryInteractor.getTracksHistory()
+        return TrackListUiMapper.trackListToTrackListUi(tracks)
     }
     
     fun onSearchFocused() {

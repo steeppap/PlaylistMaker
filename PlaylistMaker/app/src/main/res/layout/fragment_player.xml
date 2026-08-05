@@ -97,9 +97,12 @@
 
         <ImageButton
             android:id="@+id/add_to_favorite"
-            style="@style/AddToPlaylistAndAddToFavorite"
+            android:layout_width="@dimen/ic_size_51"
+            android:layout_height="@dimen/ic_size_51"
+            android:layout_marginTop="@dimen/ic_size_24"
+
             android:background="@drawable/button_ripple_oval"
-            android:src="@drawable/ic_add_to_favorite_51"
+            android:src="@drawable/ic_favorite_non_active_51"
             app:layout_constraintEnd_toStartOf="@id/right_guideline"
             app:layout_constraintTop_toTopOf="@id/play_stop_btn" />
 

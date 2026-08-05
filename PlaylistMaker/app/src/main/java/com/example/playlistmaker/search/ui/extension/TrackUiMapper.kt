@@ -15,21 +15,23 @@ object TrackUiMapper {
             releaseDate = track.releaseDate,
             primaryGenreName = track.primaryGenreName,
             country = track.country,
-            previewUrl = track.previewUrl
+            previewUrl = track.previewUrl,
+            isFavorite = track.isFavorite
         )
     }
-    fun trackUiModelToTrack(trackUiModel: TrackUiModel): Track{
+    fun trackUiModelToTrack(trackUiModel: TrackUiModel?): Track{
         return Track(
-            trackName = trackUiModel.trackName,
-            artistName = trackUiModel.artistName,
-            trackTimeMillis = trackUiModel.trackTimeMillis,
-            artworkUrl100 = trackUiModel.artworkUrl100,
-            trackId = trackUiModel.trackId,
-            collectionName = trackUiModel.collectionName,
-            releaseDate = trackUiModel.releaseDate,
-            primaryGenreName = trackUiModel.primaryGenreName,
-            country = trackUiModel.country,
-            previewUrl = trackUiModel.previewUrl
+            trackName = trackUiModel?.trackName,
+            artistName = trackUiModel?.artistName,
+            trackTimeMillis = trackUiModel?.trackTimeMillis ?: 0,
+            artworkUrl100 = trackUiModel?.artworkUrl100,
+            trackId = trackUiModel?.trackId,
+            collectionName = trackUiModel?.collectionName,
+            releaseDate = trackUiModel?.releaseDate,
+            primaryGenreName = trackUiModel?.primaryGenreName,
+            country = trackUiModel?.country,
+            previewUrl = trackUiModel?.previewUrl,
+            isFavorite = trackUiModel?.isFavorite ?: false
         )
     }
 }

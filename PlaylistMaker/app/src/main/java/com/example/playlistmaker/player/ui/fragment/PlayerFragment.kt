@@ -1,11 +1,13 @@
 package com.example.playlistmaker.player.ui.fragment
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
@@ -13,6 +15,7 @@ import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.FragmentPlayerBinding
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel
 import com.example.playlistmaker.search.ui.models.TrackUiModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.getViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -32,7 +35,7 @@ class PlayerFragment : Fragment() {
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initPlayerActivity()
+        initPlayerFragment()
         setListeners()
     }
     
@@ -46,10 +49,14 @@ class PlayerFragment : Fragment() {
         _binding = null
     }
     
-    private fun initPlayerActivity() {
-        val trackPreviewUrl = requireArguments().getString(ARGS_TRACK_PREVIEW_URL) ?: ""
+    private fun initPlayerFragment() {
+        val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireArguments().getParcelable(ARGS_TRACK, TrackUiModel::class.java)
+        } else {
+            TODO("VERSION.SDK_INT < TIRAMISU")
+        }
         
-        viewModel = getViewModel { parametersOf(trackPreviewUrl) }
+        viewModel = getViewModel { parametersOf(track) }
         
         viewModel.observePlayerStateWithProgress().observe(viewLifecycleOwner) {
             binding.timeBelowPlayBtn.text = it.progressTime
@@ -57,6 +64,9 @@ class PlayerFragment : Fragment() {
         }
         viewModel.observeTrackUiModel().observe(viewLifecycleOwner) {
             showTrackInfo(it)
+        }
+        viewModel.observeFavoriteTrack().observe(viewLifecycleOwner) { isFavorite ->
+            favoriteState(isFavorite)
         }
     }
     
@@ -66,6 +76,19 @@ class PlayerFragment : Fragment() {
         binding.playStopBtn.setOnClickListener {
             viewModel.playbackControl()
         }
+        
+        binding.addToFavorite.setOnClickListener {
+            lifecycleScope.launch {
+                viewModel.toggleFavorite()
+            }
+        }
+    }
+    
+    private fun favoriteState(isFavorite: Boolean) {
+        binding.addToFavorite.setImageResource(
+            if (isFavorite) R.drawable.ic_favorite_active_51
+            else R.drawable.ic_favorite_non_active_51
+        )
     }
     
     private fun changeButtonIcon(isPlaying: Boolean) {
@@ -103,9 +126,9 @@ class PlayerFragment : Fragment() {
     }
     
     companion object {
-        private const val ARGS_TRACK_PREVIEW_URL = "track_preview_url"
+        private const val ARGS_TRACK = "track"
         
-        fun createArgs(trackPreviewUrl: String): Bundle =
-            bundleOf(ARGS_TRACK_PREVIEW_URL to trackPreviewUrl)
+        fun createArgs(track: TrackUiModel): Bundle =
+            bundleOf(ARGS_TRACK to track)
     }
 }

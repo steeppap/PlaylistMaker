@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.playlistmaker.player.domain.api.MediaPlayerInteractor
+import com.example.playlistmaker.player.domain.db.FavoriteTracksInteractor
 import com.example.playlistmaker.player.domain.state.PlayerStateWithProgress
-import com.example.playlistmaker.search.domain.models.Track
 import com.example.playlistmaker.search.ui.extension.TrackUiMapper
 import com.example.playlistmaker.search.ui.models.TrackUiModel
 import kotlinx.coroutines.Job
@@ -19,11 +19,13 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class PlayerViewModel(
     private val mediaPlayerInteractor: MediaPlayerInteractor,
-    previewUrl: String
+    private val favoriteTracksInteractor: FavoriteTracksInteractor,
+    track: TrackUiModel
 ) : ViewModel(),
     MediaPlayerInteractor.MediaPlayerListener {
     
     private var timerJob: Job? = null
+    
     private val playerStateWithProgressLiveData = MutableLiveData(
         PlayerStateWithProgress(STATE_DEFAULT, DEFAULT_TIME)
     )
@@ -34,10 +36,18 @@ class PlayerViewModel(
     private val trackUiModelLiveData = MutableLiveData<TrackUiModel>()
     fun observeTrackUiModel(): LiveData<TrackUiModel> = trackUiModelLiveData
     
+    private val favoriteTrackLiveData = MutableLiveData<Boolean>()
+    fun observeFavoriteTrack(): LiveData<Boolean> = favoriteTrackLiveData
+    
     init {
-        mediaPlayerInteractor.setPreviewUrl(previewUrl)
+        mediaPlayerInteractor.setPreviewUrl(track.previewUrl)
         mediaPlayerInteractor.setListener(this)
-        mediaPlayerInteractor.getTrackByPreviewUrl()
+        trackUiModelLiveData.postValue(track)
+        
+        viewModelScope.launch {
+            val isFavorite = favoriteTracksInteractor.isInFavoriteById(track.trackId!!)
+            favoriteTrackLiveData.postValue(isFavorite)
+        }
     }
     
     fun playbackControl() {
@@ -46,6 +56,22 @@ class PlayerViewModel(
     
     fun onPause() {
         mediaPlayerInteractor.onPause()
+    }
+    
+    suspend fun toggleFavorite() {
+        val currentTrack = trackUiModelLiveData.value
+        val track = TrackUiMapper.trackUiModelToTrack(currentTrack)
+        
+        if (favoriteTrackLiveData.value == true) {
+            favoriteTracksInteractor.removeFromFavorite(track)
+            trackUiModelLiveData.postValue(currentTrack?.copy(isFavorite = false))
+            favoriteTrackLiveData.postValue(false)
+            
+        } else {
+            favoriteTracksInteractor.addToFavorite(track)
+            trackUiModelLiveData.postValue(currentTrack?.copy(isFavorite = true))
+            favoriteTrackLiveData.postValue(true)
+        }
     }
     
     override fun onCleared() {
@@ -59,10 +85,6 @@ class PlayerViewModel(
         playerStateWithProgressLiveData.value = current?.copy(playerState = newState)
         
         startProgressUpdate(playerStateWithProgressLiveData.value?.playerState)
-    }
-    
-    override fun onTrackLoaded(track: Track) {
-        trackUiModelLiveData.value = TrackUiMapper.trackToTrackUiModel(track)
     }
     
     private fun startProgressUpdate(state: Int?) {
