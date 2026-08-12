@@ -4,14 +4,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.playlistmaker.media_library.domain.db.PlaylistInteractor
+import com.example.playlistmaker.media_library.ui.extension.PlaylistUiMapper
+import com.example.playlistmaker.media_library.ui.extension.PlaylistsUiMapper
+import com.example.playlistmaker.media_library.ui.models.PlaylistUi
+import com.example.playlistmaker.media_library.ui.states.UiEvent
 import com.example.playlistmaker.player.domain.api.MediaPlayerInteractor
+import com.example.playlistmaker.player.domain.db.FavoriteTracksInteractor
 import com.example.playlistmaker.player.domain.state.PlayerStateWithProgress
-import com.example.playlistmaker.search.domain.models.Track
 import com.example.playlistmaker.search.ui.extension.TrackUiMapper
 import com.example.playlistmaker.search.ui.models.TrackUiModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
@@ -19,11 +26,14 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class PlayerViewModel(
     private val mediaPlayerInteractor: MediaPlayerInteractor,
-    previewUrl: String
+    private val favoriteTracksInteractor: FavoriteTracksInteractor,
+    private val playlistInteractor: PlaylistInteractor,
+    track: TrackUiModel
 ) : ViewModel(),
     MediaPlayerInteractor.MediaPlayerListener {
     
     private var timerJob: Job? = null
+    
     private val playerStateWithProgressLiveData = MutableLiveData(
         PlayerStateWithProgress(STATE_DEFAULT, DEFAULT_TIME)
     )
@@ -34,10 +44,29 @@ class PlayerViewModel(
     private val trackUiModelLiveData = MutableLiveData<TrackUiModel>()
     fun observeTrackUiModel(): LiveData<TrackUiModel> = trackUiModelLiveData
     
+    private val favoriteTrackLiveData = MutableLiveData<Boolean>()
+    fun observeFavoriteTrack(): LiveData<Boolean> = favoriteTrackLiveData
+    
+    private val playlistsStateLiveData = MutableLiveData<List<PlaylistUi>>()
+    fun observePlaylistsState(): LiveData<List<PlaylistUi>> = playlistsStateLiveData
+    
+    private val inPlaylistStateLiveData = MutableLiveData<UiEvent?>()
+    fun observeInPlaylistState(): LiveData<UiEvent?> = inPlaylistStateLiveData
+    
     init {
-        mediaPlayerInteractor.setPreviewUrl(previewUrl)
+        mediaPlayerInteractor.setPreviewUrl(track.previewUrl)
         mediaPlayerInteractor.setListener(this)
-        mediaPlayerInteractor.getTrackByPreviewUrl()
+        trackUiModelLiveData.postValue(track)
+        
+        viewModelScope.launch {
+            val isFavorite = favoriteTracksInteractor.isInFavoriteById(track.trackId!!)
+            favoriteTrackLiveData.postValue(isFavorite)
+            
+            playlistInteractor.getAllPlaylists().collect { playlists ->
+                val playlistsUi = PlaylistsUiMapper.playlistsToPlaylistsUi(playlists)
+                playlistsStateLiveData.postValue(playlistsUi)
+            }
+        }
     }
     
     fun playbackControl() {
@@ -46,6 +75,47 @@ class PlayerViewModel(
     
     fun onPause() {
         mediaPlayerInteractor.onPause()
+    }
+    
+    fun addTrackToPlaylist(playlist: PlaylistUi) {
+        val track = trackUiModelLiveData.value ?: return
+        
+        viewModelScope.launch {
+            val isInPlaylist = withContext(Dispatchers.IO) {
+                playlistInteractor.addTrackToPlaylist(
+                    TrackUiMapper.trackUiModelToTrackPlaylist(track),
+                    PlaylistUiMapper.playlistUiToPlaylist(playlist)
+                )
+            }
+            
+            if (isInPlaylist) {
+                inPlaylistStateLiveData.value =
+                    UiEvent.ShowToast("Трек уже добавлен в плейлист ${playlist.title}", false)
+            } else {
+                inPlaylistStateLiveData.value =
+                    UiEvent.ShowToast("Добавлено в плейлист ${playlist.title}", true)
+            }
+        }
+    }
+    
+    fun clearInPlaylistEvent() {
+        inPlaylistStateLiveData.value = null
+    }
+    
+    suspend fun toggleFavorite() {
+        val currentTrack = trackUiModelLiveData.value
+        val track = TrackUiMapper.trackUiModelToTrack(currentTrack)
+        
+        if (favoriteTrackLiveData.value == true) {
+            favoriteTracksInteractor.removeFromFavorite(track)
+            trackUiModelLiveData.postValue(currentTrack?.copy(isFavorite = false))
+            favoriteTrackLiveData.postValue(false)
+            
+        } else {
+            favoriteTracksInteractor.addToFavorite(track)
+            trackUiModelLiveData.postValue(currentTrack?.copy(isFavorite = true))
+            favoriteTrackLiveData.postValue(true)
+        }
     }
     
     override fun onCleared() {
@@ -59,10 +129,6 @@ class PlayerViewModel(
         playerStateWithProgressLiveData.value = current?.copy(playerState = newState)
         
         startProgressUpdate(playerStateWithProgressLiveData.value?.playerState)
-    }
-    
-    override fun onTrackLoaded(track: Track) {
-        trackUiModelLiveData.value = TrackUiMapper.trackToTrackUiModel(track)
     }
     
     private fun startProgressUpdate(state: Int?) {

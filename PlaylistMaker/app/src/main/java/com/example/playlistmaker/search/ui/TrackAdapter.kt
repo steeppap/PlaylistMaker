@@ -23,10 +23,10 @@ class TrackAdapter(
         holder.bind(trackList[position])
         
         holder.itemView.setOnClickListener {
-            trackList[position].previewUrl?.let { url ->
+            trackList[position].let { track ->
                 navController.navigate(
                     R.id.playerFragment,
-                    PlayerFragment.createArgs(url)
+                    PlayerFragment.createArgs(track)
                 )
                 onItemClick?.invoke(trackList[position])
             }

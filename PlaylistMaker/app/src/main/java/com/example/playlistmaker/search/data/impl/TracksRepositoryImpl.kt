@@ -1,5 +1,6 @@
 package com.example.playlistmaker.search.data.impl
 
+import com.example.playlistmaker.player.data.db.AppDatabase
 import com.example.playlistmaker.search.data.NetworkClient
 import com.example.playlistmaker.search.data.dto.ITunesRequest
 import com.example.playlistmaker.search.data.dto.ITunesResponse
@@ -9,14 +10,23 @@ import com.example.playlistmaker.search.domain.models.Track
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class TracksRepositoryImpl(private val networkClient: NetworkClient) : TracksRepository {
+class TracksRepositoryImpl(
+    private val networkClient: NetworkClient,
+    private val appDatabase: AppDatabase
+) : TracksRepository {
     
     override fun search(expression: String): Flow<Pair<List<Track>, Int>> = flow {
         try {
             val response = networkClient.doRequest(ITunesRequest(expression))
+            
             val tracks = if (response.resultCode == COMPLETE_CODE) {
-                (response as ITunesResponse).results.map { track ->
-                    TrackDtoMapper.dataToDomainModel(track)
+                val favoriteTracksId = appDatabase.trackDao().getFavoriteTracksId().toSet()
+                
+                (response as ITunesResponse).results.map { trackDto ->
+                    val track = TrackDtoMapper.dataToDomainModel(trackDto)
+                    
+                    val isFavorite = track.trackId != null && track.trackId in favoriteTracksId
+                    track.copy(isFavorite = isFavorite)
                 }
             } else {
                 emptyList()

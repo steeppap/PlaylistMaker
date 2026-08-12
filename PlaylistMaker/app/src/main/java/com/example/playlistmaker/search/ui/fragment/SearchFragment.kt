@@ -60,14 +60,18 @@ class SearchFragment : Fragment() {
         
         trackListAdapter = TrackAdapter(emptyList(), findNavController()) { track ->
             if (clickDebounce()) {
-                viewModel.addTrackToHistory(track)
+                lifecycleScope.launch {
+                    viewModel.addTrackToHistory(track)
+                }
             }
         }
         
         historyAdapter =
             TrackAdapter(emptyList(), findNavController()) { track ->
                 if (clickDebounce()) {
-                    viewModel.addTrackToHistoryFromHistoryAdapter(track)
+                    lifecycleScope.launch {
+                        viewModel.addTrackToHistoryFromHistoryAdapter(track)
+                    }
                 }
             }
         
