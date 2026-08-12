@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.media.MediaPlayer
 import androidx.room.Room
+import com.example.playlistmaker.media_library.data.db.impl.PlaylistRepositoryImpl
+import com.example.playlistmaker.media_library.domain.db.PlaylistRepository
 import com.example.playlistmaker.player.data.db.AppDatabase
 import com.example.playlistmaker.player.data.db.MIGRATION_1_2
 import com.example.playlistmaker.player.data.impl.FavoriteTracksRepositoryImpl
@@ -89,6 +91,10 @@ val dataModule = module {
     
     single<FavoriteTracksRepository> {
         FavoriteTracksRepositoryImpl(get())
+    }
+    
+    single<PlaylistRepository> {
+        PlaylistRepositoryImpl(get(), get())
     }
     
 }

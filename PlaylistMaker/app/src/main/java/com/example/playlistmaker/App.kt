@@ -5,6 +5,7 @@ import com.example.playlistmaker.di.dataModule
 import com.example.playlistmaker.di.domainModule
 import com.example.playlistmaker.di.viewModelModule
 import com.example.playlistmaker.settings.domain.api.ThemeInteractor
+import com.markodevcic.peko.PermissionRequester
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
@@ -20,5 +21,6 @@ class App : Application() {
         }
         val themeInteractor: ThemeInteractor = get()
         themeInteractor.setDarkModeEnabled(themeInteractor.isDarkModeEnabled())
+        PermissionRequester.initialize(applicationContext)
     }
 }

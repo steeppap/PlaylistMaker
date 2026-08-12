@@ -1,5 +1,6 @@
 package com.example.playlistmaker.search.ui.extension
 
+import com.example.playlistmaker.media_library.domain.models.TrackPlaylist
 import com.example.playlistmaker.search.domain.models.Track
 import com.example.playlistmaker.search.ui.models.TrackUiModel
 
@@ -32,6 +33,21 @@ object TrackUiMapper {
             country = trackUiModel?.country,
             previewUrl = trackUiModel?.previewUrl,
             isFavorite = trackUiModel?.isFavorite ?: false
+        )
+    }
+    
+    fun trackUiModelToTrackPlaylist(trackPlaylistUi: TrackUiModel?): TrackPlaylist {
+        return TrackPlaylist(
+            trackId = trackPlaylistUi?.trackId,
+            artworkUrl100 = trackPlaylistUi?.artworkUrl100,
+            trackName = trackPlaylistUi?.trackName,
+            artistName = trackPlaylistUi?.artistName,
+            collectionName = trackPlaylistUi?.collectionName,
+            releaseDate = trackPlaylistUi?.releaseDate,
+            primaryGenreName = trackPlaylistUi?.primaryGenreName,
+            country = trackPlaylistUi?.country,
+            trackTimeMillis = trackPlaylistUi?.trackTimeMillis ?: 0,
+            previewUrl = trackPlaylistUi?.previewUrl
         )
     }
 }
