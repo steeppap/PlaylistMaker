@@ -50,8 +50,8 @@ class PlayerViewModel(
     private val playlistsStateLiveData = MutableLiveData<List<PlaylistUi>>()
     fun observePlaylistsState(): LiveData<List<PlaylistUi>> = playlistsStateLiveData
     
-    private val inPlaylistStateLiveData = MutableLiveData<UiEvent?>()
-    fun observeInPlaylistState(): LiveData<UiEvent?> = inPlaylistStateLiveData
+    private val inPlaylistStateLiveData = MutableLiveData<UiEvent.ShowToast?>()
+    fun observeInPlaylistState(): LiveData<UiEvent.ShowToast?> = inPlaylistStateLiveData
     
     init {
         mediaPlayerInteractor.setPreviewUrl(track.previewUrl)
@@ -90,10 +90,10 @@ class PlayerViewModel(
             
             if (isInPlaylist) {
                 inPlaylistStateLiveData.value =
-                    UiEvent.ShowToast("Трек уже добавлен в плейлист ${playlist.title}", false)
+                    UiEvent.ShowToast(playlist.title, false)
             } else {
                 inPlaylistStateLiveData.value =
-                    UiEvent.ShowToast("Добавлено в плейлист ${playlist.title}", true)
+                    UiEvent.ShowToast(playlist.title, true)
             }
         }
     }

@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
-import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
@@ -21,10 +20,12 @@ import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.widget.doOnTextChanged
 import androidx.exifinterface.media.ExifInterface
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.FragmentCreatePlaylistBinding
 import com.example.playlistmaker.media_library.ui.viewmodels.CreatePlaylistViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -82,28 +83,6 @@ class CreatePlaylistFragment : Fragment() {
             }
         }
         
-        titleTextWatcher = object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val newText = s.toString()
-                viewModel.updateTitleEditText(newText)
-            }
-            
-            override fun afterTextChanged(s: Editable?) {}
-        }
-        
-        descriptionTextWatcher = object : TextWatcher {
-            override fun afterTextChanged(p0: Editable?) {}
-            
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {}
-            
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                val newText = p0.toString()
-                viewModel.updateDescEditText(newText)
-            }
-        }
-        
         pickMedia =
             registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
                 
@@ -127,13 +106,21 @@ class CreatePlaylistFragment : Fragment() {
                 }
                 Toast.makeText(
                     requireContext(),
-                    "Плейлист ${titleEditText.text.trim()} создан",
+                    getString(R.string.playlist_has_been_created, titleEditText.text.trim()),
                     Toast.LENGTH_LONG
                 ).show()
                 findNavController().navigateUp()
             }
-            titleEditText.addTextChangedListener(titleTextWatcher)
-            descriptionEditText.addTextChangedListener(descriptionTextWatcher)
+            titleTextWatcher = titleEditText.doOnTextChanged { s, _, _, _ ->
+                val newText = s.toString()
+                viewModel.updateTitleEditText(newText)
+            }
+            
+            descriptionTextWatcher = descriptionEditText.doOnTextChanged { s, _, _, _ ->
+                val newText = s.toString()
+                viewModel.updateDescEditText(newText)
+            }
+            
             addPhoto.setOnClickListener {
                 lifecycleScope.launch {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -150,7 +137,7 @@ class CreatePlaylistFragment : Fragment() {
                                         
                                         Toast.makeText(
                                             requireContext(),
-                                            "Разрешение необходимо для выбора обложки плейлиста",
+                                            R.string.permission_to_select_playlist_cover,
                                             Toast.LENGTH_LONG
                                         ).show()
                                         
@@ -232,7 +219,7 @@ class CreatePlaylistFragment : Fragment() {
                     if (finalBitmap !== bitmap) bitmap.recycle()
                     finalBitmap.recycle()
                 } else {
-                    Log.e("SavePhoto", "Не удалось декодировать Bitmap (получился null)")
+                    Log.e("SavePhoto", "Не удалось декодировать Bitmap (null)")
                 }
             } catch (e: Exception) {
                 Log.e("SavePhoto", "Ошибка при декодировании или сохранении: ${e.message}")
@@ -243,12 +230,12 @@ class CreatePlaylistFragment : Fragment() {
     private fun showExitDialog() {
         if (binding.titleEditText.text.isNotEmpty() || binding.descriptionEditText.text.isNotEmpty() || binding.playlistPhoto.drawable != null) {
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Завершить создание плейлиста?")
-                .setMessage("Все несохраненные данные будут потеряны")
-                .setNeutralButton("Отмена") { dialog, which ->
+                .setTitle(R.string.finish_creating_the_playlist)
+                .setMessage(R.string.all_unsaved_data_will_be_lost)
+                .setNeutralButton(R.string.cancel) { dialog, which ->
                 
                 }
-                .setPositiveButton("Завершить") { dialog, which ->
+                .setPositiveButton(R.string.finish) { dialog, which ->
                     findNavController().navigateUp()
                 }
                 .show()
