@@ -189,4 +189,31 @@
         <item name="android:textSize">@dimen/text_size_14</item>
     </style>
 
+    <style name="CreatePlaylistEditText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">54dp</item>
+        <item name="layout_constraintStart_toStartOf">parent</item>
+        <item name="layout_constraintEnd_toEndOf">parent</item>
+        <item name="android:layout_marginHorizontal">@dimen/margin_16</item>
+        <item name="android:background">@drawable/rounded_stroke</item>
+        <item name="android:focusable">true</item>
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:imeOptions">actionDone</item>
+        <item name="android:paddingStart">@dimen/margin_16</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColorHint">@color/black_button_text</item>
+        <item name="android:fontWeight">400</item>
+        <item name="android:textSize">@dimen/text_size_settings_point</item>
+        <item name="android:inputType">text</item>
+        <item name="android:textCursorDrawable">@drawable/cursor</item>
+        <item name="android:textColorHighlight">@color/track_tint_dark_mode</item>
+    </style>
+
+    <style name="TextPlaylist">
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/black_button_text</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
 </resources>

@@ -4,14 +4,21 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.playlistmaker.media_library.domain.db.PlaylistInteractor
+import com.example.playlistmaker.media_library.ui.extension.PlaylistUiMapper
+import com.example.playlistmaker.media_library.ui.extension.PlaylistsUiMapper
+import com.example.playlistmaker.media_library.ui.models.PlaylistUi
+import com.example.playlistmaker.media_library.ui.states.UiEvent
 import com.example.playlistmaker.player.domain.api.MediaPlayerInteractor
 import com.example.playlistmaker.player.domain.db.FavoriteTracksInteractor
 import com.example.playlistmaker.player.domain.state.PlayerStateWithProgress
 import com.example.playlistmaker.search.ui.extension.TrackUiMapper
 import com.example.playlistmaker.search.ui.models.TrackUiModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
@@ -20,6 +27,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class PlayerViewModel(
     private val mediaPlayerInteractor: MediaPlayerInteractor,
     private val favoriteTracksInteractor: FavoriteTracksInteractor,
+    private val playlistInteractor: PlaylistInteractor,
     track: TrackUiModel
 ) : ViewModel(),
     MediaPlayerInteractor.MediaPlayerListener {
@@ -39,6 +47,12 @@ class PlayerViewModel(
     private val favoriteTrackLiveData = MutableLiveData<Boolean>()
     fun observeFavoriteTrack(): LiveData<Boolean> = favoriteTrackLiveData
     
+    private val playlistsStateLiveData = MutableLiveData<List<PlaylistUi>>()
+    fun observePlaylistsState(): LiveData<List<PlaylistUi>> = playlistsStateLiveData
+    
+    private val inPlaylistStateLiveData = MutableLiveData<UiEvent.ShowToast?>()
+    fun observeInPlaylistState(): LiveData<UiEvent.ShowToast?> = inPlaylistStateLiveData
+    
     init {
         mediaPlayerInteractor.setPreviewUrl(track.previewUrl)
         mediaPlayerInteractor.setListener(this)
@@ -47,6 +61,11 @@ class PlayerViewModel(
         viewModelScope.launch {
             val isFavorite = favoriteTracksInteractor.isInFavoriteById(track.trackId!!)
             favoriteTrackLiveData.postValue(isFavorite)
+            
+            playlistInteractor.getAllPlaylists().collect { playlists ->
+                val playlistsUi = PlaylistsUiMapper.playlistsToPlaylistsUi(playlists)
+                playlistsStateLiveData.postValue(playlistsUi)
+            }
         }
     }
     
@@ -56,6 +75,31 @@ class PlayerViewModel(
     
     fun onPause() {
         mediaPlayerInteractor.onPause()
+    }
+    
+    fun addTrackToPlaylist(playlist: PlaylistUi) {
+        val track = trackUiModelLiveData.value ?: return
+        
+        viewModelScope.launch {
+            val isInPlaylist = withContext(Dispatchers.IO) {
+                playlistInteractor.addTrackToPlaylist(
+                    TrackUiMapper.trackUiModelToTrackPlaylist(track),
+                    PlaylistUiMapper.playlistUiToPlaylist(playlist)
+                )
+            }
+            
+            if (isInPlaylist) {
+                inPlaylistStateLiveData.value =
+                    UiEvent.ShowToast(playlist.title, false)
+            } else {
+                inPlaylistStateLiveData.value =
+                    UiEvent.ShowToast(playlist.title, true)
+            }
+        }
+    }
+    
+    fun clearInPlaylistEvent() {
+        inPlaylistStateLiveData.value = null
     }
     
     suspend fun toggleFavorite() {

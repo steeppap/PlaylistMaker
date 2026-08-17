@@ -28,5 +28,22 @@
     <string name="empty_favorite_tracks">Ваша медиатека пуста</string>
     <string name="empty_playlists">Вы не создали \n ни одного плейлиста</string>
     <string name="new_playlist">Новый плейлист</string>
-
+    <string name="title">Название*</string>
+    <string name="description">Описание</string>
+    <string name="create">Создать</string>
+    <string name="add_to_palylist">Добавить в плейлист</string>
+    <string name="permission_to_select_playlist_cover">Разрешение необходимо для выбора обложки плейлиста</string>
+    <string name="finish_creating_the_playlist">Завершить создание плейлиста?</string>
+    <string name="all_unsaved_data_will_be_lost">Все несохраненные данные будут потеряны</string>
+    <string name="cancel">Отмена</string>
+    <string name="finish">Завершить</string>
+    <string name="playlist_has_been_created">Плейлист %s создан</string>
+    <string name="track_has_already_been_added_to_playlist">Трек уже добавлен в плейлист %s</string>
+    <string name="added_to_playlist">Добавлено в плейлист %s</string>
+    <plurals name="track_count">
+        <item quantity="one">%d трек</item>
+        <item quantity="few">%d трека</item>
+        <item quantity="many">%d треков</item>
+        <item quantity="other">%d треков</item>
+    </plurals>
 </resources>
