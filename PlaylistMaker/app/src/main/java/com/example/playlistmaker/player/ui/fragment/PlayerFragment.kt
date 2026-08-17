@@ -16,7 +16,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.FragmentPlayerBinding
-import com.example.playlistmaker.media_library.ui.states.UiEvent
 import com.example.playlistmaker.player.ui.PlaylistInPlayerAdapter
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel
 import com.example.playlistmaker.search.ui.models.TrackUiModel
@@ -93,23 +92,31 @@ class PlayerFragment : Fragment() {
             playlistAdapter.updatePlaylists(playlists)
         }
         viewModel.observeInPlaylistState().observe(viewLifecycleOwner) { event ->
-            when (event) {
-                is UiEvent.ShowToast -> {
-                    Toast.makeText(
-                        requireContext(),
-                        event.message,
-                        Toast.LENGTH_LONG
-                    ).show()
-                    if (event.shouldHideBottomSheet) {
-                        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-                    }
-                    viewModel.clearInPlaylistEvent()
-                }
-                
-                else -> {
-                    return@observe
-                }
+            
+            if (event?.shouldHideBottomSheet == null) {
+                return@observe
+            } else if (event.shouldHideBottomSheet) {
+                Toast.makeText(
+                    requireContext(),
+                    getString(
+                        R.string.added_to_playlist,
+                        event.message
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    getString(
+                        R.string.track_has_already_been_added_to_playlist,
+                        event.message
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
             }
+            viewModel.clearInPlaylistEvent()
+            
         }
         binding.recyclerViewPlaylists.adapter = playlistAdapter
         
@@ -170,6 +177,7 @@ class PlayerFragment : Fragment() {
                 binding.overlay.visibility = View.GONE
                 binding.overlay.alpha = 0f
             }
+            
             else -> {
                 binding.overlay.visibility = View.VISIBLE
                 binding.overlay.alpha = 0.6f
