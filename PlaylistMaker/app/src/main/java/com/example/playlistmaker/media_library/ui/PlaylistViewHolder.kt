@@ -15,13 +15,11 @@ class PlaylistViewHolder(private val binding: ItemPlaylistInMediaLibraryBinding)
         binding.apply {
             playlistTitle.text = view.title
             
-            val count = view.tracksCount
-            trackCounts.text = when {
-                count % 100 in 11..19 -> "$count треков"
-                count % 10 == 1 -> "$count трек"
-                count % 10 in 2..4 -> "$count трека"
-                else -> "$count треков"
-            }
+            trackCounts.text = itemView.context.resources.getQuantityString(
+                R.plurals.track_count,
+                view.tracksCount,
+                view.tracksCount
+            )
         }
         
         Glide.with(itemView)
