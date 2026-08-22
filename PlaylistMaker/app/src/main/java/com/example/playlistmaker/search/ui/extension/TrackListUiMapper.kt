@@ -1,5 +1,6 @@
 package com.example.playlistmaker.search.ui.extension
 
+import com.example.playlistmaker.media_library.domain.models.TrackPlaylist
 import com.example.playlistmaker.search.domain.models.Track
 import com.example.playlistmaker.search.ui.models.TrackUiModel
 
@@ -10,9 +11,10 @@ object TrackListUiMapper {
             TrackUiMapper.trackToTrackUiModel(track)
         }
     }
-    fun trackListUiToTrackList(trackListUi: List<TrackUiModel>): List<Track> {
-        return trackListUi.map { trackUiModel ->
-            TrackUiMapper.trackUiModelToTrack(trackUiModel)
+    
+    fun tracksPlaylistToTrackListUi(tracksPlaylist: List<TrackPlaylist>): List<TrackUiModel> {
+        return tracksPlaylist.map { tracksPlaylist ->
+            TrackUiMapper.trackPlaylistToTrackUiModel(tracksPlaylist)
         }
     }
 }

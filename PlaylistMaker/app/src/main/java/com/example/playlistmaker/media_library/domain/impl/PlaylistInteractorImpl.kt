@@ -4,7 +4,10 @@ import com.example.playlistmaker.media_library.domain.db.PlaylistInteractor
 import com.example.playlistmaker.media_library.domain.db.PlaylistRepository
 import com.example.playlistmaker.media_library.domain.models.Playlist
 import com.example.playlistmaker.media_library.domain.models.TrackPlaylist
+import com.example.playlistmaker.media_library.ui.extension.PlaylistUiMapper
+import com.example.playlistmaker.media_library.ui.models.PlaylistUi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class PlaylistInteractorImpl(private val repository: PlaylistRepository) : PlaylistInteractor {
     
@@ -29,5 +32,33 @@ class PlaylistInteractorImpl(private val repository: PlaylistRepository) : Playl
         playlist: Playlist
     ): Boolean {
         return repository.addTrackToPlaylist(track, playlist)
+    }
+    
+    override suspend fun removeTrackFromPlaylist(
+        trackId: Long,
+        playlistUi: PlaylistUi
+    ) {
+        val playlist = PlaylistUiMapper.playlistUiToPlaylist(playlistUi)
+        repository.removeTrackFromPlaylist(trackId, playlist)
+    }
+    
+    override fun getPlaylistById(playlistId: Long): Flow<PlaylistUi> = flow {
+        repository.getPlaylistById(playlistId).collect {
+            val playlistUi = PlaylistUiMapper.playlistToPlaylistUi(it)
+            emit(playlistUi)
+        }
+    }
+    
+    override fun getTracksByIds(tracksIds: String?): Flow<List<TrackPlaylist>> {
+        return repository.getTracksByIds(tracksIds)
+    }
+    
+    override suspend fun updatePlaylistInfo(
+        playlistId: Long,
+        title: String,
+        description: String?,
+        coverPath: String?
+    ) {
+        repository.updatePlaylistInfo(playlistId, title, description, coverPath)
     }
 }

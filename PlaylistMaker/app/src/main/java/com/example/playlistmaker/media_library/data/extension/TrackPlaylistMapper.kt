@@ -4,7 +4,10 @@ import com.example.playlistmaker.media_library.data.db.entity.TrackPlaylistEntit
 import com.example.playlistmaker.media_library.domain.models.TrackPlaylist
 
 object TrackPlaylistMapper {
-    fun trackPlaylistToTrackPlaylistEntity(trackPlaylist: TrackPlaylist): TrackPlaylistEntity {
+    fun trackPlaylistToTrackPlaylistEntity(
+        trackPlaylist: TrackPlaylist,
+        addetAt: Long
+    ): TrackPlaylistEntity {
         return TrackPlaylistEntity(
             trackId = trackPlaylist.trackId,
             artworkUrl100 = trackPlaylist.artworkUrl100,
@@ -15,7 +18,8 @@ object TrackPlaylistMapper {
             primaryGenreName = trackPlaylist.primaryGenreName,
             country = trackPlaylist.country,
             trackTimeMillis = trackPlaylist.trackTimeMillis,
-            previewUrl = trackPlaylist.previewUrl
+            previewUrl = trackPlaylist.previewUrl,
+            addedAt = addetAt
         )
     }
     

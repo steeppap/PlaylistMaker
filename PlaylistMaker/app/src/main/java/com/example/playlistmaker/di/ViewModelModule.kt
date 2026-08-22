@@ -1,7 +1,10 @@
 package com.example.playlistmaker.di
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.playlistmaker.media_library.ui.viewmodels.CreatePlaylistViewModel
+import com.example.playlistmaker.media_library.ui.viewmodels.EditPlaylistViewModel
 import com.example.playlistmaker.media_library.ui.viewmodels.FavoriteTracksViewModel
+import com.example.playlistmaker.media_library.ui.viewmodels.PlaylistViewModel
 import com.example.playlistmaker.media_library.ui.viewmodels.PlaylistsViewModel
 import com.example.playlistmaker.player.domain.api.MediaPlayerInteractor
 import com.example.playlistmaker.player.ui.view_model.PlayerViewModel
@@ -38,7 +41,10 @@ val viewModelModule = module {
         PlaylistsViewModel(get())
     }
     
-    viewModel {
-        CreatePlaylistViewModel(get())
+    viewModel {(savedStateHandle: SavedStateHandle) ->
+        CreatePlaylistViewModel(savedStateHandle,get())
+    }
+    viewModel {(playlistId: Long) ->
+        PlaylistViewModel(get(), playlistId)
     }
 }

@@ -16,14 +16,14 @@ object PlaylistEntityMapper {
         )
     }
     
-    fun playlistEntityToPlaylist(playlistEntity: PlaylistEntity): Playlist {
+    fun playlistEntityToPlaylist(playlistEntity: PlaylistEntity?): Playlist {
         return Playlist(
-            id = playlistEntity.id,
-            title = playlistEntity.title,
-            description = playlistEntity.description,
-            coverPath = playlistEntity.coverPath,
-            tracksIds = playlistEntity.tracksIds,
-            tracksCount = playlistEntity.tracksCount
+            id = playlistEntity?.id,
+            title = playlistEntity?.title ?: "",
+            description = playlistEntity?.description,
+            coverPath = playlistEntity?.coverPath,
+            tracksIds = playlistEntity?.tracksIds,
+            tracksCount = playlistEntity?.tracksCount ?: 0
         )
     }
 }
