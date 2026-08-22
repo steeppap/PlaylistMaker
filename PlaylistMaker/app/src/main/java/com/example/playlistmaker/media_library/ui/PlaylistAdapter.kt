@@ -1,8 +1,11 @@
 package com.example.playlistmaker.media_library.ui
 
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
+import com.example.playlistmaker.R
+import com.example.playlistmaker.media_library.ui.fragments.PlaylistFragment
 import com.example.playlistmaker.media_library.ui.models.PlaylistUi
 
 class PlaylistAdapter(
@@ -22,8 +25,15 @@ class PlaylistAdapter(
         
         holder.itemView.setOnClickListener {
             playlists[position].let { playlist ->
-                
-                onItemClick?.invoke(playlists[position])
+                if (playlist.id != null) {
+                    navController.navigate(
+                        R.id.playlistFragment,
+                        args = PlaylistFragment.createArgs(playlist.id)
+                    )
+                    onItemClick?.invoke(playlists[position])
+                } else {
+                   Toast.makeText(holder.itemView.context, "Ошибка данных плейлиста", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

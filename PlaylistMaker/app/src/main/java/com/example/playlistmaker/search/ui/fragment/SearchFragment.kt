@@ -58,22 +58,22 @@ class SearchFragment : Fragment() {
     
     private fun initSearchActivity() {
         
-        trackListAdapter = TrackAdapter(emptyList(), findNavController()) { track ->
+        trackListAdapter = TrackAdapter(emptyList(), findNavController(), onItemClick = { track ->
             if (clickDebounce()) {
                 lifecycleScope.launch {
                     viewModel.addTrackToHistory(track)
                 }
             }
-        }
+        })
         
         historyAdapter =
-            TrackAdapter(emptyList(), findNavController()) { track ->
+            TrackAdapter(emptyList(), findNavController(), onItemClick = { track ->
                 if (clickDebounce()) {
                     lifecycleScope.launch {
                         viewModel.addTrackToHistoryFromHistoryAdapter(track)
                     }
                 }
-            }
+            })
         
         binding.apply {
             recyclerViewHistory.adapter = historyAdapter

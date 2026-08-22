@@ -10,7 +10,8 @@ import com.example.playlistmaker.search.ui.models.TrackUiModel
 class TrackAdapter(
     private var trackList: List<TrackUiModel>,
     private val navController: NavController,
-    private val onItemClick: ((TrackUiModel) -> Unit)? = null
+    private val onItemClick: ((TrackUiModel) -> Unit)? = null,
+    private val onLongItemClick: ((TrackUiModel) -> Unit)? = null
 ) : RecyclerView.Adapter<TrackViewHolder>() {
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrackViewHolder =
@@ -30,6 +31,10 @@ class TrackAdapter(
                 )
                 onItemClick?.invoke(trackList[position])
             }
+        }
+        holder.itemView.setOnLongClickListener {
+            onLongItemClick?.invoke(trackList[position])
+            true
         }
     }
     

@@ -50,4 +50,19 @@ object TrackUiMapper {
             previewUrl = trackPlaylistUi?.previewUrl
         )
     }
+    fun trackPlaylistToTrackUiModel(trackPlaylist: TrackPlaylist): TrackUiModel {
+        return TrackUiModel(
+            trackId = trackPlaylist.trackId,
+            artworkUrl100 = trackPlaylist.artworkUrl100,
+            trackName = trackPlaylist.trackName,
+            artistName = trackPlaylist.artistName,
+            collectionName = trackPlaylist.collectionName,
+            releaseDate = trackPlaylist.releaseDate,
+            primaryGenreName = trackPlaylist.primaryGenreName,
+            country = trackPlaylist.country,
+            trackTimeMillis = trackPlaylist.trackTimeMillis,
+            previewUrl = trackPlaylist.previewUrl,
+            isFavorite = false
+        )
+    }
 }

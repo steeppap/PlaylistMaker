@@ -7,7 +7,7 @@ import androidx.room.Room
 import com.example.playlistmaker.media_library.data.db.impl.PlaylistRepositoryImpl
 import com.example.playlistmaker.media_library.domain.db.PlaylistRepository
 import com.example.playlistmaker.player.data.db.AppDatabase
-import com.example.playlistmaker.player.data.db.MIGRATION_1_2
+import com.example.playlistmaker.player.data.db.MIGRATION_2_3
 import com.example.playlistmaker.player.data.impl.FavoriteTracksRepositoryImpl
 import com.example.playlistmaker.player.data.impl.MediaPlayerInteractorImpl
 import com.example.playlistmaker.player.domain.db.FavoriteTracksRepository
@@ -85,7 +85,7 @@ val dataModule = module {
     
     single {
         Room.databaseBuilder(androidContext(), AppDatabase::class.java, "database.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_2_3)
             .build()
     }
     

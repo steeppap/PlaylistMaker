@@ -20,19 +20,25 @@ import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.os.bundleOf
 import androidx.core.widget.doOnTextChanged
 import androidx.exifinterface.media.ExifInterface
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.example.playlistmaker.R
 import com.example.playlistmaker.databinding.FragmentCreatePlaylistBinding
 import com.example.playlistmaker.media_library.ui.viewmodels.CreatePlaylistViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.markodevcic.peko.PermissionRequester
 import com.markodevcic.peko.PermissionResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 import java.io.File
 
 class CreatePlaylistFragment : Fragment() {
@@ -43,6 +49,7 @@ class CreatePlaylistFragment : Fragment() {
     private lateinit var descriptionTextWatcher: TextWatcher
     private lateinit var pickMedia: ActivityResultLauncher<PickVisualMediaRequest>
     val requester = PermissionRequester.instance()
+    private var isEditMode = false
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -83,6 +90,21 @@ class CreatePlaylistFragment : Fragment() {
             }
         }
         
+        viewModel.observeCoverPath().observe(viewLifecycleOwner) { coverPath ->
+            Glide.with(binding.playlistPhoto)
+                .load(coverPath)
+                .fitCenter()
+                .into(binding.playlistPhoto)
+        }
+        
+        viewModel.observeIsEditMode().observe(viewLifecycleOwner) {
+            if (it) {
+                isEditMode = it
+                binding.fragmentTitle.setText(R.string.edit)
+                binding.createButton.setText(R.string.save)
+            }
+        }
+        
         pickMedia =
             registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
                 
@@ -98,18 +120,40 @@ class CreatePlaylistFragment : Fragment() {
     
     private fun setListeners() {
         binding.apply {
-            backButton.setOnClickListener { showExitDialog() }
-            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) { showExitDialog() }
+            backButton.setOnClickListener {
+                if (isEditMode) {
+                    findNavController().navigateUp()
+                } else showExitDialog()
+            }
+            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+                if (isEditMode) {
+                    findNavController().navigateUp()
+                } else showExitDialog()
+            }
             createButton.setOnClickListener {
-                lifecycleScope.launch {
-                    viewModel.createPlaylist()
+                if (isEditMode) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        viewModel.savePlaylistInfo()
+                        withContext(Dispatchers.Main) {
+                            findNavController().navigateUp()
+                        }
+                    }
+                } else {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        viewModel.createPlaylist()
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(
+                                requireContext(),
+                                getString(
+                                    R.string.playlist_has_been_created,
+                                    titleEditText.text.trim()
+                                ),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            findNavController().navigateUp()
+                        }
+                    }
                 }
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.playlist_has_been_created, titleEditText.text.trim()),
-                    Toast.LENGTH_LONG
-                ).show()
-                findNavController().navigateUp()
             }
             titleTextWatcher = titleEditText.doOnTextChanged { s, _, _, _ ->
                 val newText = s.toString()
@@ -228,7 +272,10 @@ class CreatePlaylistFragment : Fragment() {
     }
     
     private fun showExitDialog() {
-        if (binding.titleEditText.text.isNotEmpty() || binding.descriptionEditText.text.isNotEmpty() || binding.playlistPhoto.drawable != null) {
+        if (binding.titleEditText.text.isNotEmpty()
+            || binding.descriptionEditText.text.isNotEmpty()
+            || binding.playlistPhoto.drawable != null
+        ) {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.finish_creating_the_playlist)
                 .setMessage(R.string.all_unsaved_data_will_be_lost)
@@ -242,5 +289,12 @@ class CreatePlaylistFragment : Fragment() {
         } else {
             findNavController().navigateUp()
         }
+    }
+    
+    companion object {
+        private const val ARGS_PLAYLIST_ID = "playlist_id"
+        
+        fun createArgs(playlistId: Long): Bundle =
+            bundleOf(ARGS_PLAYLIST_ID to playlistId)
     }
 }
